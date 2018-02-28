@@ -17,7 +17,6 @@
 
 Define_Module(OppQueue);
 
-
 void OppQueue::initialize() {
     Queue::initialize();
     // parameter initialization is done in .ini
@@ -29,6 +28,11 @@ void OppQueue::initialize() {
     // when simulation starts, Q2 @ L1
     serverIsUp = false; // true if server S2 is up
     scheduleAt(simTime()+visitTime1, switchToL2Event);
+    bool switchToL2 = true; // direction of switch movement, true if goes
+                            // from L1 to L2
+
+    cMessage *wakeUpServerEvent;
+
 
 }
 
@@ -37,7 +41,7 @@ void OppQueue::handleMessage(cMessage *msg) {
     // self-messages
     if (msg == switchToL2Event) {
         serverIsUp = false;
-        // start switchOverTime
+        // start switchOverTime timer
         scheduleAt(simTime()+switchOverTime, endSwitchTimeEvent);
     }
     else if (msg == switchToL1Event) {
@@ -47,12 +51,17 @@ void OppQueue::handleMessage(cMessage *msg) {
     }
     else if (msg == endSwitchTimeEvent) {
         // TODO: wake S2 or S1 depending on switch direction
-        // if switch to L2
+        if (switchToL2 == true) {// if switch to L2
         serverIsUp = true;
         scheduleAt(simTime()+visitTime2, switchToL1Event);
-        // else if switch to L1
-        serverIsUp = false;
-        scheduleAt(simTime()+visitTime1, switchToL2Event);
+        }
+        else {
+            // else if switch to L1
+            serverIsUp = false;
+            scheduleAt(simTime()+visitTime1, switchToL2Event);
+            // TODO: must activate server S1
+            // send(,wakeUpServerEvent);
+        }
 
     }
     // messages from Q1/S1
@@ -63,9 +72,6 @@ void OppQueue::handleMessage(cMessage *msg) {
         else { // server is down
             // TODO: message is received and not processed, stays in queue
             // until server activation
-            // ("switchToL2Event")
-            // self-message schedule
-            // S1 must go down
             EV << "Server is down! Job in queue waiting to be processed\n";
             queue.insert(job);
             emit(queueLengthSignal, length());
