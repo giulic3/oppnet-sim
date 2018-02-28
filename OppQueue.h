@@ -16,12 +16,27 @@
 #ifndef OPPQUEUE_H_
 #define OPPQUEUE_H_
 
+#include <omnetpp.h>
 #include "Queue.h"
 
-class OppQueue {
-public:
-    OppQueue();
-    virtual ~OppQueue();
-};
+using namespace omnetpp;
+
+/** Queue module to model Q2 behavior */
+
+class OppQueue : public queueing::Queue {
+
+    protected:
+        simtime_t switchOverTime;
+        simtime_t visitTime1; // time at L1
+        simtime_t visitTime2; // time at L2
+
+        cMessage *switchToL1Event;
+        cMessage *switchToL2Event;
+        cMessage *endSwitchTimeEvent; // TODO: not sure
+
+        virtual void initialize() override;
+        virtual void handleMessage(cMessage *msg) override;
+        virtual void refreshDisplay() const override;
+    };
 
 #endif /* OPPQUEUE_H_ */

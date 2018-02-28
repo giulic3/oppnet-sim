@@ -15,14 +15,66 @@
 
 #include "OppQueue.h"
 
-Define_Module(OppQueue); // compulsory
+Define_Module(OppQueue);
 
-OppQueue::OppQueue() {
-    // TODO Auto-generated constructor stub
+
+void OppQueue::initialize() {
+    Queue::initialize();
+    // parameter initialization is done in .ini
+    // TODO: parameters in this class or for the generic sim?
+    switchOverTime = par("switchOverTime");
+    visitTime1 = par("visitTimeL1"); // time at L1
+    visitTime2 = par("visitTimeL2"); // time at L2
+
+    // when simulation starts, Q2 @ L1
+    serverIsUp = false; // true if server S2 is up
+    scheduleAt(simTime()+visitTime1, switchToL2Event);
 
 }
 
-OppQueue::~OppQueue() {
-    // TODO Auto-generated destructor stub
+void OppQueue::handleMessage(cMessage *msg) {
+
+    // self-messages
+    if (msg == switchToL2Event) {
+        serverIsUp = false;
+        // start switchOverTime
+        scheduleAt(simTime()+switchOverTime, endSwitchTimeEvent);
+    }
+    else if (msg == switchToL1Event) {
+        serverIsUp = false;
+        scheduleAt(simTime()+switchOverTime, endSwitchTimeEvent);
+
+    }
+    else if (msg == endSwitchTimeEvent) {
+        // TODO: wake S2 or S1 depending on switch direction
+        // if switch to L2
+        serverIsUp = true;
+        scheduleAt(simTime()+visitTime2, switchToL1Event);
+        // else if switch to L1
+        serverIsUp = false;
+        scheduleAt(simTime()+visitTime1, switchToL2Event);
+
+    }
+    // messages from Q1/S1
+    else {
+        if (serverIsUp) {
+            Queue::handleMessage(msg);
+        }
+        else { // server is down
+            // TODO: message is received and not processed, stays in queue
+            // until server activation
+            // ("switchToL2Event")
+            // self-message schedule
+            // S1 must go down
+            EV << "Server is down! Job in queue waiting to be processed\n";
+            queue.insert(job);
+            emit(queueLengthSignal, length());
+            job->setQueueCount(job->getQueueCount() + 1);
+        }
+    }
+}
+
+void OppQueue::refreshDisplay() const {
+
 }
 

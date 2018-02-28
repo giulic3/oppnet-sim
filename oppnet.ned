@@ -20,7 +20,13 @@ import org.omnetpp.queueing.Queue;
 import org.omnetpp.queueing.Sink;
 import org.omnetpp.queueing.Source;
 
-network TandemQueueingNetwork
+simple OppQueue extends Queue
+{
+    @class(OppQueue);
+}
+
+
+network OppNet
 {
     @display("bgb=487,190");
     submodules:
@@ -34,7 +40,7 @@ network TandemQueueingNetwork
             @display("p=140,82");
         }
 
-        Q2: Queue {
+        Q2: OppQueue {
 
             @display("p=230,82");
         }
