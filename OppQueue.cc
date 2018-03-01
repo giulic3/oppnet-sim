@@ -18,6 +18,7 @@
 Define_Module(OppQueue);
 
 void OppQueue::initialize() {
+
     Queue::initialize();
     // parameter initialization is done in .ini
     // TODO: parameters in this class or for the generic sim?
@@ -28,11 +29,7 @@ void OppQueue::initialize() {
     // when simulation starts, Q2 @ L1
     serverIsUp = false; // true if server S2 is up
     scheduleAt(simTime()+visitTime1, switchToL2Event);
-    bool switchToL2 = true; // direction of switch movement, true if goes
-                            // from L1 to L2
-
-    cMessage *wakeUpServerEvent;
-
+    switchToL2 = true;
 
 }
 
@@ -60,6 +57,8 @@ void OppQueue::handleMessage(cMessage *msg) {
             serverIsUp = false;
             scheduleAt(simTime()+visitTime1, switchToL2Event);
             // TODO: must activate server S1
+            cMessage *wakeUpServerEvent = new cMessage("wakeUp");
+            send(wakeUpServerEvent, "in"); // TODO: add connection?
             // send(,wakeUpServerEvent);
         }
 

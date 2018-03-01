@@ -13,34 +13,24 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-#ifndef OPPQUEUE_H_
-#define OPPQUEUE_H_
+#ifndef QUEUEEXT_H_
+#define QUEUEEXT_H_
 
 #include <omnetpp.h>
 #include "Queue.h"
 
 using namespace omnetpp;
 
-/** Queue module to model Q2 behavior */
+/** QueueExt extends Queue module */
 
-class OppQueue : public queueing::Queue {
-
+class QueueExt : public queueing::Queue {
     protected:
-        simtime_t switchOverTime;
-        simtime_t visitTime1; // time at L1
-        simtime_t visitTime2; // time at L2
-
-        cMessage *switchToL1Event;
-        cMessage *switchToL2Event;
-        cMessage *endSwitchTimeEvent;
-        cMessage *wakeUpServerEvent;
-
-        bool switchToL2; // direction of switch movement, true if goes from L1 to L2
         bool serverIsUp;
 
         virtual void initialize() override;
         virtual void handleMessage(cMessage *msg) override;
         virtual void refreshDisplay() const override;
-    };
 
-#endif /* OPPQUEUE_H_ */
+};
+
+#endif /* QUEUEEXT_H_ */
