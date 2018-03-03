@@ -19,21 +19,20 @@ Define_Module(OppQueue);
 
 void OppQueue::initialize() {
 
+    // when simulation starts, Q2 @ L1
     Queue::initialize();
     // parameter initialization is done in .ini
-    // TODO: parameters in this class or for the generic sim?
     switchOverTime = par("switchOverTime");
-    visitTime1 = par("visitTimeL1"); // time at L1
-    visitTime2 = par("visitTimeL2"); // time at L2
+    // visit time distribution at current location, @L1 or @L2
+    visitTime = par("visitTime");
 
-    // when simulation starts, Q2 @ L1
     serverIsUp = false; // true if server S2 is up
-    scheduleAt(simTime()+visitTime1, switchToL2Event);
-    switchToL2 = true;
+    scheduleAt(simTime()+visitTime, startSwitchEvent);
 
 }
 
 void OppQueue::handleMessage(cMessage *msg) {
+
 
     // self-messages
     if (msg == switchToL2Event) {

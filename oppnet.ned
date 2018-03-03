@@ -54,11 +54,11 @@ network OppNet
 
             @display("p=421,82");
         }
-        
-        connections:
-        	source.out --> Q1.in++;
-        	Q1.out --> Q2.in++;
-        	Q2.out --> Q3.in++;
-        	Q3.out --> sink.in++;
+
+    connections:
+        source.out --> Q1.in++;
+        Q1.out --> Q2.in++;
+        Q2.out --> Q3.in++;
+        Q3.out --> sink.in++;
 }
 

@@ -27,15 +27,12 @@ class OppQueue : public queueing::Queue {
 
     protected:
         simtime_t switchOverTime;
-        simtime_t visitTime1; // time at L1
-        simtime_t visitTime2; // time at L2
+        simtime_t visitTime;
 
-        cMessage *switchToL1Event;
-        cMessage *switchToL2Event;
+        cMessage *startSwitchEvent;
         cMessage *endSwitchTimeEvent;
         cMessage *wakeUpServerEvent;
 
-        bool switchToL2; // direction of switch movement, true if goes from L1 to L2
         bool serverIsUp;
 
         virtual void initialize() override;
