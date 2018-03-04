@@ -20,11 +20,9 @@ Define_Module(OppQueue);
 void OppQueue::initialize() {
 
     Queue::initialize();
-    // parameter initialization is done in .ini
     // given that RNG is deterministic, all parameter sequences are the same (if the seeds are too)
     visitTime = par("visitTime");
     switchOverTime = par("switchOverTime");
-
     serverIsAvailable = false;
     serverIsIdle = true;
     // when simulation starts, Q2 @ L1
@@ -34,7 +32,6 @@ void OppQueue::initialize() {
 }
 
 void OppQueue::handleMessage(cMessage *msg) {
-
 
     // self-messages
     if (msg == startSwitchEvent) {
@@ -66,13 +63,17 @@ void OppQueue::handleMessage(cMessage *msg) {
             serverIsIdle = true; // TODO not sure
 
         }
-        else { // server is not available
-               // TODO message is enqueued but will be processed
-               // only when the next handleMessage is called
-            // this->queue.insert(job);
-            // emit(queueLengthSignal, length());
-            // job->setQueueCount(job->getQueueCount() + 1);
-            // HOW? rewrite handleMessage completely?
+        // server is not available
+        // TODO message is enqueued but will be processed
+        // only when the next handleMessage is called
+        else {
+            /*
+            Job *job = check_and_cast<Job *>(msg);
+            arrival(job);//
+            this->queue.insert(job);
+            emit(queueLengthSignal, length());
+            job->setQueueCount(job->getQueueCount() + 1);
+            */
         }
     }
 }
