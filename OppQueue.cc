@@ -26,6 +26,7 @@ void OppQueue::initialize() {
     switchOverTime = par("switchOverTime");
 
     serverIsAvailable = false;
+    serverIsIdle = true;
     // when simulation starts, Q2 @ L1
     isQ2LastLocation = false; // TODO: set true for L1 in .ned file
     scheduleAt(simTime()+visitTime, startSwitchEvent);
@@ -38,7 +39,10 @@ void OppQueue::handleMessage(cMessage *msg) {
     // self-messages
     if (msg == startSwitchEvent) {
         // TODO if server is processing a job now, the process must be interrupted
-        // ...
+        // check if server is idle
+        if (serverIsIdle == false) {
+            //...
+        }
         serverIsAvailable = false;
         // start switchOverTime timer
         scheduleAt(simTime()+switchOverTime, endSwitchOverTimeEvent);
@@ -47,7 +51,6 @@ void OppQueue::handleMessage(cMessage *msg) {
         if (isQ2LastLocation == true) {
             // if true, Q2 was here and now's gone
             // so server here stays unavailable
-
         }
         else { // Q2 was not here, and now it is at the end of the switch
             serverIsAvailable = true;
@@ -58,11 +61,18 @@ void OppQueue::handleMessage(cMessage *msg) {
     // messages from Q1/S1
     else {
         if (serverIsAvailable) {
+            serverIsIdle = false;
             Queue::handleMessage(msg);
+            serverIsIdle = true; // TODO not sure
+
         }
         else { // server is not available
-               // so message can't be received
-               // TODO need an ack...
+               // TODO message is enqueued but will be processed
+               // only when the next handleMessage is called
+            // this->queue.insert(job);
+            // emit(queueLengthSignal, length());
+            // job->setQueueCount(job->getQueueCount() + 1);
+            // HOW? rewrite handleMessage completely?
         }
     }
 }
