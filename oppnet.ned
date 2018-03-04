@@ -35,7 +35,7 @@ network OppNet
             @display("p=43,82");
         }
 
-        Q1: Queue {
+        Q1: OppQueue {
 
             @display("p=140,82");
         }

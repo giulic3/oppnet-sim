@@ -26,14 +26,15 @@ using namespace omnetpp;
 class OppQueue : public queueing::Queue {
 
     protected:
-        simtime_t switchOverTime;
+        // visit time distribution at current location, @L1 or @L2
         simtime_t visitTime;
+        simtime_t switchOverTime;
 
         cMessage *startSwitchEvent;
-        cMessage *endSwitchTimeEvent;
-        cMessage *wakeUpServerEvent;
+        cMessage *endSwitchOverTimeEvent;
 
-        bool serverIsUp;
+        bool serverIsAvailable; // true if Q2 @ this location
+        bool isQ2LastLocation; // true if Q2 was here and must switch
 
         virtual void initialize() override;
         virtual void handleMessage(cMessage *msg) override;

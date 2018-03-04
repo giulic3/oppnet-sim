@@ -19,14 +19,15 @@ Define_Module(OppQueue);
 
 void OppQueue::initialize() {
 
-    // when simulation starts, Q2 @ L1
     Queue::initialize();
     // parameter initialization is done in .ini
-    switchOverTime = par("switchOverTime");
-    // visit time distribution at current location, @L1 or @L2
+    // given that RNG is deterministic, all parameter sequences are the same (if the seeds are too)
     visitTime = par("visitTime");
+    switchOverTime = par("switchOverTime");
 
-    serverIsUp = false; // true if server S2 is up
+    serverIsAvailable = false;
+    // when simulation starts, Q2 @ L1
+    isQ2LastLocation = false; // TODO: set true for L1 in .ned file
     scheduleAt(simTime()+visitTime, startSwitchEvent);
 
 }
@@ -35,45 +36,33 @@ void OppQueue::handleMessage(cMessage *msg) {
 
 
     // self-messages
-    if (msg == switchToL2Event) {
-        serverIsUp = false;
+    if (msg == startSwitchEvent) {
+        // TODO if server is processing a job now, the process must be interrupted
+        // ...
+        serverIsAvailable = false;
         // start switchOverTime timer
-        scheduleAt(simTime()+switchOverTime, endSwitchTimeEvent);
+        scheduleAt(simTime()+switchOverTime, endSwitchOverTimeEvent);
     }
-    else if (msg == switchToL1Event) {
-        serverIsUp = false;
-        scheduleAt(simTime()+switchOverTime, endSwitchTimeEvent);
+    else if (msg == endSwitchOverTimeEvent) { // TODO refactor code in elegant way
+        if (isQ2LastLocation == true) {
+            // if true, Q2 was here and now's gone
+            // so server here stays unavailable
 
-    }
-    else if (msg == endSwitchTimeEvent) {
-        // TODO: wake S2 or S1 depending on switch direction
-        if (switchToL2 == true) {// if switch to L2
-        serverIsUp = true;
-        scheduleAt(simTime()+visitTime2, switchToL1Event);
         }
-        else {
-            // else if switch to L1
-            serverIsUp = false;
-            scheduleAt(simTime()+visitTime1, switchToL2Event);
-            // TODO: must activate server S1
-            cMessage *wakeUpServerEvent = new cMessage("wakeUp");
-            send(wakeUpServerEvent, "in"); // TODO: add connection?
-            // send(,wakeUpServerEvent);
+        else { // Q2 was not here, and now it is at the end of the switch
+            serverIsAvailable = true;
         }
 
+        scheduleAt(simTime()+visitTime, startSwitchEvent);
     }
     // messages from Q1/S1
     else {
-        if (serverIsUp) {
+        if (serverIsAvailable) {
             Queue::handleMessage(msg);
         }
-        else { // server is down
-            // TODO: message is received and not processed, stays in queue
-            // until server activation
-            EV << "Server is down! Job in queue waiting to be processed\n";
-            queue.insert(job);
-            emit(queueLengthSignal, length());
-            job->setQueueCount(job->getQueueCount() + 1);
+        else { // server is not available
+               // so message can't be received
+               // TODO need an ack...
         }
     }
 }
