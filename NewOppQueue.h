@@ -33,6 +33,8 @@
 
 #include "QueueingDefs.h"
 
+//using namespace omnetpp;
+
 namespace queueing {
 
 class Job;
@@ -53,6 +55,18 @@ private:
 
     Job *getFromQueue();
 
+    // visit time distribution at current location, @L1 or @L2
+    simtime_t visitTime;
+    simtime_t switchOverTime;
+
+    cMessage *startSwitchEvent;
+    cMessage *endSwitchOverTimeEvent;
+
+    bool serverIsAvailable; // true if Q2 @ this location
+    bool serverIsIdle; // true if server associated is not processing any jobs
+    bool isQ2LastLocation; // true if Q2 was here and must switch
+
+
 public:
     NewOppQueue();
     virtual ~NewOppQueue();
@@ -71,9 +85,7 @@ protected:
     virtual simtime_t startService(Job *job);
     virtual void endService(Job *job);
 };
-}
-;
-//namespace
 
+}; //namespace
 #endif /* NEWOPPQUEUE_H_ */
 

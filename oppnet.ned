@@ -20,11 +20,38 @@ import org.omnetpp.queueing.Queue;
 import org.omnetpp.queueing.Sink;
 import org.omnetpp.queueing.Source;
 
-simple OppQueue extends Queue
-{
-    @class(OppQueue);
-}
 
+//simple OppQueue extends Queue
+//{
+//    @class(OppQueue);
+//}
+
+//package org.omnetpp.queueing;
+
+//
+// A queue with a built-in server
+//
+simple NewOppQueue
+{
+    parameters:
+        @group(Queueing);
+        @display("i=block/queue;q=queue");
+        @signal[dropped](type="long");
+        @signal[queueLength](type="long");
+        @signal[queueingTime](type="simtime_t");
+        @signal[busy](type="bool");
+        @statistic[dropped](title="drop event";record=vector?,count;interpolationmode=none);
+        @statistic[queueLength](title="queue length";record=vector,timeavg,max;interpolationmode=sample-hold);
+        @statistic[queueingTime](title="queueing time at dequeue";record=vector?,mean,max;unit=s;interpolationmode=none);
+        @statistic[busy](title="server busy state";record=vector?,timeavg;interpolationmode=sample-hold);
+
+        int capacity = default(-1);    // negative capacity means unlimited queue
+        bool fifo = default(true);     // whether the module works as a queue (fifo=true) or a stack (fifo=false)
+        volatile double serviceTime @unit(s);
+    gates:
+        input in[];
+        output out;
+}
 
 network OppNet
 {
@@ -35,12 +62,12 @@ network OppNet
             @display("p=43,82");
         }
 
-        Q1: OppQueue {
+        Q1: NewOppQueue {
 
             @display("p=140,82");
         }
 
-        Q2: OppQueue {
+        Q2: NewOppQueue {
 
             @display("p=230,82");
         }
