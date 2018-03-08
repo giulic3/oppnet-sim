@@ -20,7 +20,6 @@ import org.omnetpp.queueing.Queue;
 import org.omnetpp.queueing.Sink;
 import org.omnetpp.queueing.Source;
 
-
 //simple OppQueue extends Queue
 //{
 //    @class(OppQueue);
@@ -31,7 +30,7 @@ import org.omnetpp.queueing.Source;
 //
 // A queue with a built-in server
 //
-simple NewOppQueue
+simple OppQueue
 {
     parameters:
         @group(Queueing);
@@ -62,12 +61,12 @@ network OppNet
             @display("p=43,82");
         }
 
-        Q1: NewOppQueue {
+        Q1: OppQueue {
 
             @display("p=140,82");
         }
 
-        Q2: NewOppQueue {
+        Q2: OppQueue {
 
             @display("p=230,82");
         }

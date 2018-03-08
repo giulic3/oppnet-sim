@@ -16,30 +16,61 @@
 #ifndef OPPQUEUE_H_
 #define OPPQUEUE_H_
 
-#include <omnetpp.h>
-#include "Queue.h"
+#include "QueueingDefs.h"
 
-using namespace omnetpp;
+//using namespace omnetpp;
 
-/** Queue module to model Q2 behavior */
+namespace queueing {
 
-class OppQueue : public queueing::Queue {
+class Job;
 
-    protected:
-        // visit time distribution at current location, @L1 or @L2
-        simtime_t visitTime;
-        simtime_t switchOverTime;
+class OppQueue: public cSimpleModule {
 
-        cMessage *startSwitchEvent;
-        cMessage *endSwitchOverTimeEvent;
+private:
+    simsignal_t droppedSignal;
+    simsignal_t queueLengthSignal;
+    simsignal_t queueingTimeSignal;
+    simsignal_t busySignal;
 
-        bool serverIsAvailable; // true if Q2 @ this location
-        bool serverIsIdle; // true if server associated is not processing any jobs
-        bool isQ2LastLocation; // true if Q2 was here and must switch
+    Job *jobServiced;
+    cMessage *endServiceMsg;
+    cQueue queue;
+    int capacity;
+    bool fifo;
 
-        virtual void initialize() override;
-        virtual void handleMessage(cMessage *msg) override;
-        virtual void refreshDisplay() const override;
-    };
+    Job *getFromQueue();
 
+    // visit time distribution at current location, @L1 or @L2
+    simtime_t visitTime;
+    simtime_t switchOverTime;
+
+    cMessage *startSwitchEvent;
+    cMessage *endSwitchOverTimeEvent;
+
+    bool serverIsAvailable; // true if Q2 @ this location
+    bool serverIsIdle; // true if server associated is not processing any jobs
+    bool isQ2LastLocation; // true if Q2 was here and must switch
+
+
+public:
+    OppQueue();
+    virtual ~OppQueue();
+    int length();
+
+    // TODO: add getters/setters
+
+protected:
+    virtual void initialize() override;
+    virtual void handleMessage(cMessage *msg) override;
+    virtual void refreshDisplay() const override;
+    virtual void finish() override;
+
+    // hook functions to (re)define behavior
+    virtual void arrival(Job *job);
+    virtual simtime_t startService(Job *job);
+    virtual void endService(Job *job);
+};
+
+}; //namespace
 #endif /* OPPQUEUE_H_ */
+
