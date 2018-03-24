@@ -10,11 +10,6 @@
 //
 // @titlepage
 //
-// <center><h1>Queueing library</h1></center>
-//
-// This is a queuing library implementation; see the QueueNet
-// directory for an example usage.
-//
 
 package org.omnetpp.queueing;
 
