@@ -60,6 +60,86 @@ void OppQueue::initialize() {
 }
 
 void OppQueue::handleMessage(cMessage *msg) {
+    // self-messages
+    if (msg == startSwitchEvent) {
+        // TODO if server is processing a job now (is not idle),
+        // the process must be interrupted
+        if (serverIsIdle == false) {
+            // this is dead code since the queue has unlimited capacity
+            if (capacity >=0 && queue.getLength() >= capacity) {
+                EV << "Capacity full! Job dropped.\n";
+                if (hasGUI())
+                    bubble("Dropped!");
+                emit(droppedSignal, 1);
+                delete job;
+                return;
+            }
+            Job *job = check_and_cast<Job *>(msg);
+            // take current job and enqueue to process it next time
+            job = jobServiced;
+            queue.insert(job);
+            emit(queueLengthSignal, length());
+            job->setQueueCount(job->getQueueCount() + 1);
+            // TODO not sure, null pointer exception?
+            jobServiced = nullptr;
+        }
+        serverIsAvailable = false;
+        // start switchOverTime timer, when it ends switch has completed
+        scheduleAt(simTime()+switchOverTime, endSwitchOverTimeEvent);
+    }
+    else if (msg == endSwitchOverTimeEvent) {
+        if (isQ2LastLocation == true) { // TODO refactor in case of nothing else to do
+            // if true, Q2 was here and now's gone
+            // so server here stays unavailable
+        }
+        else { // Q2 was not here, and now it is at the end of the switch
+            serverIsAvailable = true;
+        }
+        scheduleAt(simTime()+visitTime, startSwitchEvent);
+    }
+    else {
+        if (serverIsAvailable) { // means Q2 is @ current location
+            serverIsIdle = false;
+            // ... handleMessage ...
+
+            Job *job = check_and_cast<Job *>(msg);
+            arrival(job);
+
+            if (!jobServiced) {
+                // processor was idle, not processing any job
+                jobServiced = job;
+                emit(busySignal, true);
+                simtime_t serviceTime = startService(jobServiced);
+                scheduleAt(simTime()+serviceTime, endServiceMsg);
+            }
+            else {
+                // check for container capacity, useless if queue is unlimited
+                if (capacity >= 0 && queue.getLength() >= capacity) {
+                    EV << "Capacity full! Job dropped.\n";
+                    if (hasGUI())
+                        bubble("Dropped!");
+                    emit(droppedSignal, 1);
+                    delete job;
+                    return;
+                }
+                queue.insert(job);
+                emit(queueLengthSignal, length());
+                job->setQueueCount(job->getQueueCount() + 1);
+            }
+            serverIsIdle = true; // TODO not sure
+        }
+        // server is not available
+        // TODO message is enqueued but will be processed
+        // only when the next handleMessage is called
+        else {
+            Job *job = check_and_cast<Job *>(msg);
+            arrival(job);//
+            this->queue.insert(job);
+            emit(queueLengthSignal, length());
+            job->setQueueCount(job->getQueueCount() + 1);
+        }
+    }
+    // other messages
     if (msg == endServiceMsg) {
         endService(jobServiced);
         if (queue.isEmpty()) {
@@ -71,32 +151,6 @@ void OppQueue::handleMessage(cMessage *msg) {
             emit(queueLengthSignal, length());
             simtime_t serviceTime = startService(jobServiced);
             scheduleAt(simTime()+serviceTime, endServiceMsg);
-        }
-    }
-    else {
-        Job *job = check_and_cast<Job *>(msg);
-        arrival(job);
-
-        if (!jobServiced) {
-            // processor was idle
-            jobServiced = job;
-            emit(busySignal, true);
-            simtime_t serviceTime = startService(jobServiced);
-            scheduleAt(simTime()+serviceTime, endServiceMsg);
-        }
-        else {
-            // check for container capacity
-            if (capacity >= 0 && queue.getLength() >= capacity) {
-                EV << "Capacity full! Job dropped.\n";
-                if (hasGUI())
-                    bubble("Dropped!");
-                emit(droppedSignal, 1);
-                delete job;
-                return;
-            }
-            queue.insert(job);
-            emit(queueLengthSignal, length());
-            job->setQueueCount(job->getQueueCount() + 1);
         }
     }
 }
@@ -148,51 +202,3 @@ void OppQueue::finish() {
 }
 
 }; // namespace
-
-
-/**
- *
- * void OppQueue::handleMessage(cMessage *msg) {
--    // self-messages
--    if (msg == startSwitchEvent) {
--        // TODO if server is processing a job now, the process must be interrupted
--        // check if server is idle
--        if (serverIsIdle == false) {
--            //...
--        }
--        serverIsAvailable = false;
--        // start switchOverTime timer
--        scheduleAt(simTime()+switchOverTime, endSwitchOverTimeEvent);
--    }
--    else if (msg == endSwitchOverTimeEvent) { // TODO refactor code in elegant way
--        if (isQ2LastLocation == true) {
--            // if true, Q2 was here and now's gone
--            // so server here stays unavailable
--        }
--        else { // Q2 was not here, and now it is at the end of the switch
--            serverIsAvailable = true;
--        }
--        scheduleAt(simTime()+visitTime, startSwitchEvent);
--    }
--    // messages from Q1/S1
--    else {
--        if (serverIsAvailable) {
--            serverIsIdle = false;
--            Queue::handleMessage(msg);
--            serverIsIdle = true; // TODO not sure
--        }
--        // server is not available
--        // TODO message is enqueued but will be processed
--        // only when the next handleMessage is called
--        else {
--            Job *job = check_and_cast<Job *>(msg);
--            arrival(job);//
--            this->queue.insert(job);
--            emit(queueLengthSignal, length());
--            job->setQueueCount(job->getQueueCount() + 1);
--            */
--       /* }
--    }
--}
- *
- **/
