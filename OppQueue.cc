@@ -50,12 +50,13 @@ void OppQueue::initialize() {
     // given that RNG is deterministic, all parameter sequences are the same (if the seeds are too)
     visitTime = par("visitTime");
     switchOverTime = par("switchOverTime");
-    serverIsAvailable = false;
+    serverIsAvailable = false; // must be true for Q1 at the beginning
     serverIsIdle = true;
     // when simulation starts, Q2 @ L1
     isQ2LastLocation = false; // TODO: set true for L1 in .ned file
 
     startSwitchEvent = new cMessage("start-switch-event");
+    endSwitchOverTimeEvent = new cMessage("start-switch-over-time-event");
     scheduleAt(simTime()+visitTime, startSwitchEvent);
 }
 
@@ -65,18 +66,8 @@ void OppQueue::handleMessage(cMessage *msg) {
         // TODO if server is processing a job now (is not idle),
         // the process must be interrupted
         if (serverIsIdle == false) {
-            // this is dead code since the queue has unlimited capacity
-            if (capacity >=0 && queue.getLength() >= capacity) {
-                EV << "Capacity full! Job dropped.\n";
-                if (hasGUI())
-                    bubble("Dropped!");
-                emit(droppedSignal, 1);
-                delete job;
-                return;
-            }
-            Job *job = check_and_cast<Job *>(msg);
             // take current job and enqueue to process it next time
-            job = jobServiced;
+            Job *job = jobServiced;
             queue.insert(job);
             emit(queueLengthSignal, length());
             job->setQueueCount(job->getQueueCount() + 1);
@@ -88,7 +79,7 @@ void OppQueue::handleMessage(cMessage *msg) {
         scheduleAt(simTime()+switchOverTime, endSwitchOverTimeEvent);
     }
     else if (msg == endSwitchOverTimeEvent) {
-        if (isQ2LastLocation == true) { // TODO refactor in case of nothing else to do
+        if (isQ2LastLocation == true) {
             // if true, Q2 was here and now's gone
             // so server here stays unavailable
         }
@@ -97,41 +88,59 @@ void OppQueue::handleMessage(cMessage *msg) {
         }
         scheduleAt(simTime()+visitTime, startSwitchEvent);
     }
-    else {
+    else if {
         if (serverIsAvailable) { // means Q2 is @ current location
-            serverIsIdle = false;
-            // ... handleMessage ...
 
-            Job *job = check_and_cast<Job *>(msg);
-            arrival(job);
-
-            if (!jobServiced) {
-                // processor was idle, not processing any job
-                jobServiced = job;
-                emit(busySignal, true);
-                simtime_t serviceTime = startService(jobServiced);
-                scheduleAt(simTime()+serviceTime, endServiceMsg);
-            }
-            else {
-                // check for container capacity, useless if queue is unlimited
-                if (capacity >= 0 && queue.getLength() >= capacity) {
-                    EV << "Capacity full! Job dropped.\n";
-                    if (hasGUI())
-                        bubble("Dropped!");
-                    emit(droppedSignal, 1);
-                    delete job;
-                    return;
+            // other messages
+            if (msg == endServiceMsg) {
+                endService(jobServiced);
+                if (queue.isEmpty()) {
+                    jobServiced = nullptr;
+                    serverIsIdle = true; // TODO superflua se si usa jobServiced
+                    emit(busySignal, false);
                 }
-                queue.insert(job);
-                emit(queueLengthSignal, length());
-                job->setQueueCount(job->getQueueCount() + 1);
+                else {
+                    jobServiced = getFromQueue();
+                    emit(queueLengthSignal, length());
+                    simtime_t serviceTime = startService(jobServiced);
+                    scheduleAt(simTime()+serviceTime, endServiceMsg);
+                }
             }
-            serverIsIdle = true; // TODO not sure
+            else { // a message of another type has arrived
+
+                serverIsIdle = false;
+
+                Job *job = check_and_cast<Job *>(msg);
+                arrival(job);
+
+                if (!jobServiced) {
+                    // processor was idle, not processing any job
+                    jobServiced = job;
+                    emit(busySignal, true);
+                    simtime_t serviceTime = startService(jobServiced);
+                    scheduleAt(simTime()+serviceTime, endServiceMsg);
+                }
+                else {
+                    // check for container capacity, useless if queue is unlimited
+                    if (capacity >= 0 && queue.getLength() >= capacity) {
+                        EV << "Capacity full! Job dropped.\n";
+                        if (hasGUI())
+                            bubble("Dropped!");
+                        emit(droppedSignal, 1);
+                        delete job;
+                        return;
+                    }
+                    queue.insert(job);
+                    emit(queueLengthSignal, length());
+                    job->setQueueCount(job->getQueueCount() + 1);
+                }
+                //serverIsIdle = true; // TODO not sure
+            }
         }
-        // server is not available
+        // if server is not available
         // TODO message is enqueued but will be processed
         // only when the next handleMessage is called
-        else {
+        else { // cosa succede quando arriva un endservicemsg ma il server non è available?
             Job *job = check_and_cast<Job *>(msg);
             arrival(job);//
             this->queue.insert(job);
@@ -139,20 +148,7 @@ void OppQueue::handleMessage(cMessage *msg) {
             job->setQueueCount(job->getQueueCount() + 1);
         }
     }
-    // other messages
-    if (msg == endServiceMsg) {
-        endService(jobServiced);
-        if (queue.isEmpty()) {
-            jobServiced = nullptr;
-            emit(busySignal, false);
-        }
-        else {
-            jobServiced = getFromQueue();
-            emit(queueLengthSignal, length());
-            simtime_t serviceTime = startService(jobServiced);
-            scheduleAt(simTime()+serviceTime, endServiceMsg);
-        }
-    }
+
 }
 
 void OppQueue::refreshDisplay() const {
