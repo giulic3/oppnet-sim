@@ -73,4 +73,3 @@ protected:
 
 }; //namespace
 #endif /* OPPQUEUE_H_ */
-

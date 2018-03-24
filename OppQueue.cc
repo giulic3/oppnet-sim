@@ -27,6 +27,7 @@ OppQueue::OppQueue() {
 
     jobServiced = nullptr;
     endServiceMsg = nullptr;
+    startSwitchEvent = nullptr;
 }
 
 OppQueue::~OppQueue() {
@@ -56,6 +57,8 @@ void OppQueue::initialize() {
     serverIsIdle = true;
     // when simulation starts, Q2 @ L1
     isQ2LastLocation = false; // TODO: set true for L1 in .ned file
+
+    startSwitchEvent = new cMessage("start-switch-event");
     scheduleAt(simTime()+visitTime, startSwitchEvent);
 }
 
@@ -150,7 +153,6 @@ void OppQueue::finish() {
 }; // namespace
 
 /*
-
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
@@ -165,13 +167,9 @@ void OppQueue::finish() {
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 //
-
 #include "OppQueue.h"
-
 Define_Module(OppQueue);
-
 void OppQueue::initialize() {
-
     Queue::initialize();
     // given that RNG is deterministic, all parameter sequences are the same (if the seeds are too)
     visitTime = par("visitTime");
@@ -181,11 +179,8 @@ void OppQueue::initialize() {
     // when simulation starts, Q2 @ L1
     isQ2LastLocation = false; // TODO: set true for L1 in .ned file
     scheduleAt(simTime()+visitTime, startSwitchEvent);
-
 }
-
 void OppQueue::handleMessage(cMessage *msg) {
-
     // self-messages
     if (msg == startSwitchEvent) {
         // TODO if server is processing a job now, the process must be interrupted
@@ -205,7 +200,6 @@ void OppQueue::handleMessage(cMessage *msg) {
         else { // Q2 was not here, and now it is at the end of the switch
             serverIsAvailable = true;
         }
-
         scheduleAt(simTime()+visitTime, startSwitchEvent);
     }
     // messages from Q1/S1
@@ -214,13 +208,11 @@ void OppQueue::handleMessage(cMessage *msg) {
             serverIsIdle = false;
             Queue::handleMessage(msg);
             serverIsIdle = true; // TODO not sure
-
         }
         // server is not available
         // TODO message is enqueued but will be processed
         // only when the next handleMessage is called
         else {
-
             Job *job = check_and_cast<Job *>(msg);
             arrival(job);//
             this->queue.insert(job);
@@ -230,9 +222,6 @@ void OppQueue::handleMessage(cMessage *msg) {
        /* }
     }
 }
-
 void OppQueue::refreshDisplay() const {
-
 }
-
  */

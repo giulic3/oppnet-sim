@@ -16,16 +16,15 @@
 // TODO documentation
 //
 
-import org.omnetpp.queueing.Queue;
-import org.omnetpp.queueing.Sink;
-import org.omnetpp.queueing.Source;
-
+//import org.omnetpp.queueing.Queue;
+//import org.omnetpp.queueing.Sink;
+//import org.omnetpp.queueing.Source;
 //simple OppQueue extends Queue
 //{
 //    @class(OppQueue);
 //}
 
-//package org.omnetpp.queueing;
+package org.omnetpp.queueing;
 
 //
 // A queue with a built-in server
@@ -47,6 +46,9 @@ simple OppQueue
         int capacity = default(-1);    // negative capacity means unlimited queue
         bool fifo = default(true);     // whether the module works as a queue (fifo=true) or a stack (fifo=false)
         volatile double serviceTime @unit(s);
+        
+        volatile double visitTime @unit(s);
+        volatile double switchOverTime @unit(s);
     gates:
         input in[];
         output out;
