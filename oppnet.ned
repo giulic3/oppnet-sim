@@ -41,6 +41,9 @@ simple OppQueue
 
         volatile double visitTime @unit(s);
         volatile double switchOverTime @unit(s);
+        bool serverIsAvailable = default(false);
+        bool isQ2LastLocation = default(false);
+
     gates:
         input in[];
         output out;
@@ -57,6 +60,8 @@ network OppNet
         Q1: OppQueue {
             @display("p=140,82");
 
+            serverIsAvailable = true;
+            isQ2LastLocation = true;
         }
 
         Q2: OppQueue {

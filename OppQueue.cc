@@ -50,10 +50,10 @@ void OppQueue::initialize() {
     // given that RNG is deterministic, all parameter sequences are the same (if the seeds are too)
     visitTime = par("visitTime");
     switchOverTime = par("switchOverTime");
-    serverIsAvailable = false; // must be true for Q1 at the beginning
-    serverIsIdle = true;
+    serverIsAvailable = par("serverIsAvailable"); // must be true for Q1 at the beginning
+    serverIsIdle = true; // TODO forse superflua
     // when simulation starts, Q2 @ L1
-    isQ2LastLocation = false; // TODO: set true for L1 in .ned file
+    isQ2LastLocation = par("isQ2LastLocation"); // true for L1 and false for L2 at the beginning
 
     startSwitchEvent = new cMessage("start-switch-event");
     endSwitchOverTimeEvent = new cMessage("start-switch-over-time-event");
