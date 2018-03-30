@@ -63,7 +63,8 @@ void OppQueue::initialize() {
 void OppQueue::handleMessage(cMessage *msg) {
     // self-messages
     if (msg == startSwitchEvent) {
-        // TODO if server is processing a job now (is not idle),
+        EV << "start switch event" << endl;
+        // if the server is processing a job now (is not idle),
         // the process must be interrupted
         if (serverIsIdle == false) {
             // take current job and enqueue to process it next time
@@ -75,24 +76,42 @@ void OppQueue::handleMessage(cMessage *msg) {
             jobServiced = nullptr;
         }
         serverIsAvailable = false;
+        EV << "serverIsAvailable = false" << endl;
         // start switchOverTime timer, when it ends switch has completed
         scheduleAt(simTime()+switchOverTime, endSwitchOverTimeEvent);
     }
     else if (msg == endSwitchOverTimeEvent) {
+        EV << "end switch-over time event" << endl;
         if (isQ2LastLocation == true) {
             // if true, Q2 was here and now's gone
-            // so server here stays unavailable
+            // so the server here stays unavailable
         }
         else { // Q2 was not here, and now it is at the end of the switch
             serverIsAvailable = true;
-        }
+            EV << "serverIsAvailable = true" << endl;
+            // TODO process all the jobs that were interrupted or arrived when the server was unavailable
+            // forse non serve, viene fatto in automatico
+            if (queue.isEmpty()) {
+                jobServiced = nullptr;
+                serverIsIdle = true;
+                emit(busySignal, false);
+            }
+            else {
+                jobServiced = getFromQueue();
+                emit(queueLengthSignal, length());
+                simtime_t serviceTime = startService(jobServiced);
+                scheduleAt(simTime()+serviceTime, endServiceMsg);
+            }
+            //
         scheduleAt(simTime()+visitTime, startSwitchEvent);
+        }
     }
-    else if {
+    else {
         if (serverIsAvailable) { // means Q2 is @ current location
 
             // other messages
             if (msg == endServiceMsg) {
+                EV << "end service msg" << endl;
                 endService(jobServiced);
                 if (queue.isEmpty()) {
                     jobServiced = nullptr;
@@ -107,7 +126,7 @@ void OppQueue::handleMessage(cMessage *msg) {
                 }
             }
             else { // a message of another type has arrived
-
+                EV << "generic message/job" << endl;
                 serverIsIdle = false;
 
                 Job *job = check_and_cast<Job *>(msg);
@@ -117,6 +136,7 @@ void OppQueue::handleMessage(cMessage *msg) {
                     // processor was idle, not processing any job
                     jobServiced = job;
                     emit(busySignal, true);
+                    EV << "start service" << endl;
                     simtime_t serviceTime = startService(jobServiced);
                     scheduleAt(simTime()+serviceTime, endServiceMsg);
                 }
