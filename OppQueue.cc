@@ -60,10 +60,11 @@ void OppQueue::initialize() {
     scheduleAt(simTime()+visitTime, startSwitchEvent);
 }
 
+// TODO il problema è che gli eventi non sono concorrenti tra due code diverse,
+// per cui il mio modello non funziona
 void OppQueue::handleMessage(cMessage *msg) {
     // self-messages
     if (msg == startSwitchEvent) {
-        EV << "start switch event" << endl;
         // if the server is processing a job now (is not idle),
         // the process must be interrupted
         if (serverIsIdle == false) {
@@ -81,7 +82,6 @@ void OppQueue::handleMessage(cMessage *msg) {
         scheduleAt(simTime()+switchOverTime, endSwitchOverTimeEvent);
     }
     else if (msg == endSwitchOverTimeEvent) {
-        EV << "end switch-over time event" << endl;
         if (isQ2LastLocation == true) {
             // if true, Q2 was here and now's gone
             // so the server here stays unavailable
@@ -111,7 +111,6 @@ void OppQueue::handleMessage(cMessage *msg) {
 
             // other messages
             if (msg == endServiceMsg) {
-                EV << "end service msg" << endl;
                 endService(jobServiced);
                 if (queue.isEmpty()) {
                     jobServiced = nullptr;
