@@ -16,6 +16,9 @@
 #include "OppQueue.h"
 #include "Job.h"
 
+#define PRIORITY_GATE 0
+#define NORMAL_GATE 1
+
 namespace queueing {
 
 Define_Module(OppQueue);
@@ -47,71 +50,79 @@ void OppQueue::initialize() {
     capacity = par("capacity");
     queue.setName("queue");
 
-    // given that RNG is deterministic, all parameter sequences are the same (if the seeds are too)
     visitTime = par("visitTime");
     switchOverTime = par("switchOverTime");
     serverIsAvailable = par("serverIsAvailable"); // must be true for Q1 at the beginning
     serverIsIdle = true; // TODO forse superflua
-    // when simulation starts, Q2 @ L1
-    isQ2LastLocation = par("isQ2LastLocation"); // true for L1 and false for L2 at the beginning
 
     startSwitchEvent = new cMessage("start-switch-event");
     endSwitchOverTimeEvent = new cMessage("start-switch-over-time-event");
-    scheduleAt(simTime()+visitTime, startSwitchEvent);
+    wakeUpServerEvent = new cMessage("wake-up-server-event");
+
+    if (serverIsAvailable)
+        scheduleAt(simTime()+visitTime, startSwitchEvent);
 }
 
 // TODO il problema è che gli eventi non sono concorrenti tra due code diverse,
 // per cui il mio modello non funziona
 void OppQueue::handleMessage(cMessage *msg) {
+
+    EV << "nome del messaggio " << msg->getName() << endl;
     // self-messages
     if (msg == startSwitchEvent) {
-        // if the server is processing a job now (is not idle),
-        // the process must be interrupted
+        // if the server is processing a job now, it must be interrupted
         if (serverIsIdle == false) {
             // take current job and enqueue to process it next time
             Job *job = jobServiced;
             queue.insert(job);
             emit(queueLengthSignal, length());
             job->setQueueCount(job->getQueueCount() + 1);
-            // TODO not sure, null pointer exception?
-            jobServiced = nullptr;
+            jobServiced = nullptr; // TODO not sure, null pointer exception?
+            serverIsIdle = true;
+
         }
         serverIsAvailable = false;
+        cancelEvent(endServiceMsg);
         EV << "serverIsAvailable = false" << endl;
         // start switchOverTime timer, when it ends switch has completed
         scheduleAt(simTime()+switchOverTime, endSwitchOverTimeEvent);
     }
     else if (msg == endSwitchOverTimeEvent) {
-        if (isQ2LastLocation == true) {
-            // if true, Q2 was here and now's gone
-            // so the server here stays unavailable
+        // wake up the other queue
+        // TODO memory leak? chi li cancella?
+        cMessage *wakeUpServerEvent = new cMessage("wake-up-server-event");
+        cGate *out = gate("out", PRIORITY_GATE);
+        send(wakeUpServerEvent, out);
+        //...
+     }
+    else if (strcmp(msg->getName(),"wake-up-server-event") == 0) {
+        EV << "in wake up server event" << endl;
+        // process all the jobs that were interrupted or arrived when the server was unavailable
+        // TODO not sure, viene fatto in automatico?
+
+        serverIsAvailable = true;
+        if (queue.isEmpty()) {
+            jobServiced = nullptr;
+            serverIsIdle = true;
+            emit(busySignal, false);
         }
-        else { // Q2 was not here, and now it is at the end of the switch
-            serverIsAvailable = true;
-            EV << "serverIsAvailable = true" << endl;
-            // TODO process all the jobs that were interrupted or arrived when the server was unavailable
-            // forse non serve, viene fatto in automatico
-            if (queue.isEmpty()) {
-                jobServiced = nullptr;
-                serverIsIdle = true;
-                emit(busySignal, false);
-            }
-            else {
-                jobServiced = getFromQueue();
-                emit(queueLengthSignal, length());
-                simtime_t serviceTime = startService(jobServiced);
-                scheduleAt(simTime()+serviceTime, endServiceMsg);
-            }
-            //
-        scheduleAt(simTime()+visitTime, startSwitchEvent);
+        else {
+            jobServiced = getFromQueue();
+            serverIsIdle = false;
+            emit(queueLengthSignal, length());
+            simtime_t serviceTime = startService(jobServiced);
+            scheduleAt(simTime()+serviceTime, endServiceMsg);
         }
+        //
+    cancelEvent(wakeUpServerEvent);
+    scheduleAt(simTime()+visitTime, startSwitchEvent);
     }
     else {
         if (serverIsAvailable) { // means Q2 is @ current location
-
             // other messages
             if (msg == endServiceMsg) {
-                endService(jobServiced);
+                EV << "end service msg" << endl;
+                endService(jobServiced, NORMAL_GATE);
                 if (queue.isEmpty()) {
                     jobServiced = nullptr;
                     serverIsIdle = true; // TODO superflua se si usa jobServiced
@@ -127,7 +138,6 @@ void OppQueue::handleMessage(cMessage *msg) {
             else { // a message of another type has arrived
                 EV << "generic message/job" << endl;
                 serverIsIdle = false;
-
                 Job *job = check_and_cast<Job *>(msg);
                 arrival(job);
 
@@ -153,18 +163,20 @@ void OppQueue::handleMessage(cMessage *msg) {
                     emit(queueLengthSignal, length());
                     job->setQueueCount(job->getQueueCount() + 1);
                 }
-                //serverIsIdle = true; // TODO not sure
             }
         }
-        // if server is not available
-        // TODO message is enqueued but will be processed
-        // only when the next handleMessage is called
-        else { // cosa succede quando arriva un endservicemsg ma il server non è available?
-            Job *job = check_and_cast<Job *>(msg);
-            arrival(job);//
-            this->queue.insert(job);
-            emit(queueLengthSignal, length());
-            job->setQueueCount(job->getQueueCount() + 1);
+        // if the server is not available, msg is enqueued but will be processed next time
+        else { // TODO cosa succede quando arriva un endservicemsg ma il server non è available?
+
+            if (strcmp(msg->getName(),"end-service") != 0) {
+                EV << "casting 2? " << endl;
+                Job *job = check_and_cast<Job *>(msg); // ERRORE QUA
+                arrival(job);//
+                this->queue.insert(job);
+                emit(queueLengthSignal, length());
+                job->setQueueCount(job->getQueueCount() + 1);
+            }
+            // e se è un end-service lo perde?
         }
     }
 
@@ -206,11 +218,14 @@ simtime_t OppQueue::startService(Job *job) {
     return par("serviceTime").doubleValue();
 }
 
-void OppQueue::endService(Job *job) {
+// TODO fix gateIndex mechanism
+void OppQueue::endService(Job *job, int gateIndex) {
     EV << "Finishing service of " << job->getName() << endl;
     simtime_t d = simTime() - job->getTimestamp();
     job->setTotalServiceTime(job->getTotalServiceTime() + d);
-    send(job, "out");
+    cGate *out = gate("out", gateIndex);
+    send(job, out);
+    //send(job, "out");
 }
 
 void OppQueue::finish() {
