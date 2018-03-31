@@ -46,6 +46,8 @@ private:
 
     cMessage *startSwitchEvent;
     cMessage *endSwitchOverTimeEvent;
+    cMessage *wakeUpServerEvent;
+
 
     bool serverIsAvailable; // true if Q2 @ this location
     bool serverIsIdle; // true if server associated is not processing any jobs
@@ -68,7 +70,7 @@ protected:
     // hook functions to (re)define behavior
     virtual void arrival(Job *job);
     virtual simtime_t startService(Job *job);
-    virtual void endService(Job *job);
+    virtual void endService(Job *job, int gateIndex);
 };
 
 }; //namespace
