@@ -63,6 +63,8 @@ void OppQueue::initialize() {
         scheduleAt(simTime()+visitTime, startSwitchEvent);
 }
 
+// TODO il problema è che gli eventi non sono concorrenti tra due code diverse,
+// per cui il mio modello non funziona
 void OppQueue::handleMessage(cMessage *msg) {
 
     EV << "nome del messaggio " << msg->getName() << endl;
