@@ -58,12 +58,14 @@ void OppQueue::initialize() {
     startSwitchEvent = new cMessage("start-switch-event");
     endSwitchOverTimeEvent = new cMessage("start-switch-over-time-event");
     wakeUpServerEvent = new cMessage("wake-up-server-event");
-    scheduleAt(simTime()+visitTime, startSwitchEvent);
+
+    if (serverIsAvailable)
+        scheduleAt(simTime()+visitTime, startSwitchEvent);
 }
 
 void OppQueue::handleMessage(cMessage *msg) {
 
-    EV << "nome del messaggio" << msg->getName() << endl;
+    EV << "nome del messaggio " << msg->getName() << endl;
     // self-messages
     if (msg == startSwitchEvent) {
         // if the server is processing a job now, it must be interrupted
@@ -78,12 +80,15 @@ void OppQueue::handleMessage(cMessage *msg) {
 
         }
         serverIsAvailable = false;
+        cancelEvent(endServiceMsg);
         EV << "serverIsAvailable = false" << endl;
         // start switchOverTime timer, when it ends switch has completed
         scheduleAt(simTime()+switchOverTime, endSwitchOverTimeEvent);
     }
     else if (msg == endSwitchOverTimeEvent) {
         // wake up the other queue
+        // TODO memory leak? chi li cancella?
+        cMessage *wakeUpServerEvent = new cMessage("wake-up-server-event");
         cGate *out = gate("out", PRIORITY_GATE);
         send(wakeUpServerEvent, out);
         //...
@@ -92,6 +97,8 @@ void OppQueue::handleMessage(cMessage *msg) {
         EV << "in wake up server event" << endl;
         // process all the jobs that were interrupted or arrived when the server was unavailable
         // TODO not sure, viene fatto in automatico?
+
+        serverIsAvailable = true;
         if (queue.isEmpty()) {
             jobServiced = nullptr;
             serverIsIdle = true;
@@ -105,6 +112,7 @@ void OppQueue::handleMessage(cMessage *msg) {
             scheduleAt(simTime()+serviceTime, endServiceMsg);
         }
         //
+    cancelEvent(wakeUpServerEvent);
     scheduleAt(simTime()+visitTime, startSwitchEvent);
     }
     else {
@@ -128,7 +136,6 @@ void OppQueue::handleMessage(cMessage *msg) {
             else { // a message of another type has arrived
                 EV << "generic message/job" << endl;
                 serverIsIdle = false;
-                EV << "casting 1? " << endl;
                 Job *job = check_and_cast<Job *>(msg);
                 arrival(job);
 
@@ -159,13 +166,15 @@ void OppQueue::handleMessage(cMessage *msg) {
         // if the server is not available, msg is enqueued but will be processed next time
         else { // TODO cosa succede quando arriva un endservicemsg ma il server non è available?
 
-            EV << "casting 2? " << endl;
-
-            Job *job = check_and_cast<Job *>(msg); // ERRORE QUA
-            arrival(job);//
-            this->queue.insert(job);
-            emit(queueLengthSignal, length());
-            job->setQueueCount(job->getQueueCount() + 1);
+            if (strcmp(msg->getName(),"end-service") != 0) {
+                EV << "casting 2? " << endl;
+                Job *job = check_and_cast<Job *>(msg); // ERRORE QUA
+                arrival(job);//
+                this->queue.insert(job);
+                emit(queueLengthSignal, length());
+                job->setQueueCount(job->getQueueCount() + 1);
+            }
+            // e se è un end-service lo perde?
         }
     }
 

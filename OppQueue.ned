@@ -43,6 +43,6 @@ simple OppQueue
         bool isQ2LastLocation = default(false);
 
     gates:
-        input in[];
-        output out[];
+        input in[2];
+        output out[2];
 }

@@ -48,6 +48,7 @@ network OppNet
         source.out --> Q1.in++;
         Q3.out --> sink.in++;
         Q1.out++ --> Q2.in++; // should be a channel? TODO
+        Q1.out++ --> Q2.in++;
         Q2.out++ --> Q1.in++;
         Q2.out++ --> Q3.in++;
 }
