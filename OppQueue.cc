@@ -16,7 +16,7 @@
 #include "OppQueue.h"
 #include "Job.h"
 
-#define PRIORITY_GATE 0
+#define PRIORITY_GATE 0 //TODO sono necessari due gate?
 #define NORMAL_GATE 1
 
 namespace queueing {
@@ -53,7 +53,7 @@ void OppQueue::initialize() {
     visitTime = par("visitTime");
     switchOverTime = par("switchOverTime");
     serverIsAvailable = par("serverIsAvailable"); // must be true for Q1 at the beginning
-    serverIsIdle = true; // TODO forse superflua
+    //serverIsIdle = true;
 
     startSwitchEvent = new cMessage("start-switch-event");
     endSwitchOverTimeEvent = new cMessage("start-switch-over-time-event");
@@ -63,22 +63,22 @@ void OppQueue::initialize() {
         scheduleAt(simTime()+visitTime, startSwitchEvent);
 }
 
-// TODO il problema è che gli eventi non sono concorrenti tra due code diverse,
-// per cui il mio modello non funziona
 void OppQueue::handleMessage(cMessage *msg) {
 
     EV << "nome del messaggio " << msg->getName() << endl;
     // self-messages
     if (msg == startSwitchEvent) {
         // if the server is processing a job now, it must be interrupted
-        if (serverIsIdle == false) {
+        //if (serverIsIdle == false) {
+        if (jobServiced) {
+            EV << "job interrupted! it will be processed next time" << endl;
             // take current job and enqueue to process it next time
             Job *job = jobServiced;
             queue.insert(job);
             emit(queueLengthSignal, length());
             job->setQueueCount(job->getQueueCount() + 1);
-            jobServiced = nullptr; // TODO not sure, null pointer exception?
-            serverIsIdle = true;
+            jobServiced = nullptr;
+            //serverIsIdle = true;
 
         }
         serverIsAvailable = false;
@@ -97,23 +97,21 @@ void OppQueue::handleMessage(cMessage *msg) {
      }
     else if (strcmp(msg->getName(),"wake-up-server-event") == 0) {
         EV << "in wake up server event" << endl;
-        // process all the jobs that were interrupted or arrived when the server was unavailable
-        // TODO not sure, viene fatto in automatico?
-
         serverIsAvailable = true;
         if (queue.isEmpty()) {
             jobServiced = nullptr;
-            serverIsIdle = true;
+            //serverIsIdle = true;
             emit(busySignal, false);
         }
         else {
+            // process all the jobs that were interrupted or arrived
+            // when the server was unavailable
             jobServiced = getFromQueue();
-            serverIsIdle = false;
+            //serverIsIdle = false;
             emit(queueLengthSignal, length());
             simtime_t serviceTime = startService(jobServiced);
             scheduleAt(simTime()+serviceTime, endServiceMsg);
         }
-        //
     cancelEvent(wakeUpServerEvent);
     scheduleAt(simTime()+visitTime, startSwitchEvent);
     }
@@ -125,7 +123,7 @@ void OppQueue::handleMessage(cMessage *msg) {
                 endService(jobServiced, NORMAL_GATE);
                 if (queue.isEmpty()) {
                     jobServiced = nullptr;
-                    serverIsIdle = true; // TODO superflua se si usa jobServiced
+                    //serverIsIdle = true;
                     emit(busySignal, false);
                 }
                 else {
@@ -137,7 +135,7 @@ void OppQueue::handleMessage(cMessage *msg) {
             }
             else { // a message of another type has arrived
                 EV << "generic message/job" << endl;
-                serverIsIdle = false;
+                //serverIsIdle = false;
                 Job *job = check_and_cast<Job *>(msg);
                 arrival(job);
 
@@ -150,7 +148,7 @@ void OppQueue::handleMessage(cMessage *msg) {
                     scheduleAt(simTime()+serviceTime, endServiceMsg);
                 }
                 else {
-                    // check for container capacity, useless if queue is unlimited
+                    // check for container capacity if queue has a size)
                     if (capacity >= 0 && queue.getLength() >= capacity) {
                         EV << "Capacity full! Job dropped.\n";
                         if (hasGUI())
@@ -170,13 +168,12 @@ void OppQueue::handleMessage(cMessage *msg) {
 
             if (strcmp(msg->getName(),"end-service") != 0) {
                 EV << "casting 2? " << endl;
-                Job *job = check_and_cast<Job *>(msg); // ERRORE QUA
+                Job *job = check_and_cast<Job *>(msg);
                 arrival(job);//
                 this->queue.insert(job);
                 emit(queueLengthSignal, length());
                 job->setQueueCount(job->getQueueCount() + 1);
             }
-            // e se è un end-service lo perde?
         }
     }
 
@@ -218,14 +215,12 @@ simtime_t OppQueue::startService(Job *job) {
     return par("serviceTime").doubleValue();
 }
 
-// TODO fix gateIndex mechanism
 void OppQueue::endService(Job *job, int gateIndex) {
     EV << "Finishing service of " << job->getName() << endl;
     simtime_t d = simTime() - job->getTimestamp();
     job->setTotalServiceTime(job->getTotalServiceTime() + d);
     cGate *out = gate("out", gateIndex);
     send(job, out);
-    //send(job, "out");
 }
 
 void OppQueue::finish() {
