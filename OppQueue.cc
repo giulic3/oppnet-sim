@@ -39,6 +39,7 @@ OppQueue::~OppQueue() {
 void OppQueue::initialize() {
 
     droppedSignal = registerSignal("dropped");
+    // time spent in the queue (time to be processed by the server excluded)
     queueingTimeSignal = registerSignal("queueingTime");
     queueLengthSignal = registerSignal("queueLength");
     emit(queueLengthSignal, 0);
