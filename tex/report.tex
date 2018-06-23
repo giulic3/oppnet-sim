@@ -1,47 +1,85 @@
-%  A simple AAU report template.
-%  2015-05-08 v. 1.2.0
-%  Copyright 2010-2015 by Jesper Kjær Nielsen <jkn@es.aau.dk>
-%
-%  Project report.
-%  Copyright 2018 by Giulia Cantini <giulia.cantini2@studio.unibo.it>
+\documentclass[a4paper,11pt]{article}
 
-%  This is free software: you can redistribute it and/or modify
-%  it under the terms of the GNU General Public License as published by
-%  the Free Software Foundation, either version 3 of the License, or
-%  (at your option) any later version.
-%
-%  This is distributed in the hope that it will be useful,
-%  but WITHOUT ANY WARRANTY; without even the implied warranty of
-%  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-%  GNU General Public License for more details.
-%
-%  You can find the GNU General Public License at <http://www.gnu.org/licenses/>.
-%
-\input{setup/preamble.tex}% package inclusion and set up of the document
-\input{setup/hyphenations.tex}%
-\input{setup/macros.tex}% my new macros
+\usepackage[utf8]{inputenc}
+\usepackage[italian]{babel}
+\usepackage{graphicx}
+\graphicspath{ {images/} }
+
+\usepackage{geometry}
+ \geometry{
+ a4paper
+ }
+
+% settings
+
+\linespread{1.1}
+ \renewcommand{\labelitemi}{$\textendash$}
+
+ \setlength{\parindent}{0ex}
 
 \begin{document}
-%frontmatter
-\pagestyle{empty} %disable headers and footers
-\pagenumbering{roman} %use roman page numbering in the frontmatter
-\input{sections/frontpage.tex}
-\input{sections/colophon.tex}
-\input{sections/titlepages.tex}
-\cleardoublepage
-\pdfbookmark[0]{Contents}{label:contents}
-\pagestyle{fancy} %enable headers and footers again
+
+\author{Giulia Cantini}
+\title{A Tandem Queueing Model for Delay Analysis in Disconnected Ad Hoc Networks\\
+\vspace{0.5cm}
+\Large{An Omnet++ simulation}}
+\maketitle
+
 \tableofcontents
-\listoftodos
-\input{sections/preface.tex}
-\cleardoublepage
-%mainmatter
-\pagenumbering{arabic} %use arabic page numbering in the mainmatter
-\input{sections/introduction.tex}
-\input{sections/ch2name.tex}
-\input{sections/conclusion.tex}
-\printbibliography[heading=bibintoc]
-\label{bib:mybiblio}
-\appendix
-\input{sections/appAname.tex}
+
+\section{Introduzione}
+I tradizionali protocolli di routing \textit{store-and-forward}, che richiedono l'esistenza di un cammino
+end-to-end che colleghi sorgente e destinazione, non possono essere utilizzati in reti
+soggette a disconnessioni frequenti. Una soluzione che può risolvere questo problema è
+sfruttare il movimento dei nodi della rete ed utilizzare il paradigma \textit{store-carry-and-forward}.
+
+In tali reti, chiamate \textit{Delay Tolerant Networks} (DTN), il ritardo di trasmissione dei dati tra i nodi
+può risultare elevato a causa delle disconnessioni.
+
+Un importante fattore che le caratterizza è l'opportunità di contatto tra coppie di nodi.
+Due nodi sono in contatto se si trovano entro il range di trasmissione l'uno dell'altro,
+ovvero ad una distanza tale da consentire lo scambio di pacchetti.
+
+Il modello sviluppato consiste di una rete opportunistica formata da un insieme di tre code
+che collaborano tra loro per realizzare il meccanismo opportunistico.
+
+Esso si basa sulle seguenti assunzioni:
+
+\begin{enumerate}
+  \item I contatti sono puramente opportunistici, ovvero non si ha nessuna conoscenza
+  di quando questi avverranno (protocollo \textit{no-context});
+  \item la distribuzione dei tempi di inter-contatto ha un primo e secondo momento
+  finiti. (????)
+  \item la trasmissione di un pacchetto potrebbe fallire in caso di tempo di contatto
+  troppo breve, con esigenza di ritrasmissione;
+  \item il nodo sorgente ha in arrivo un flusso di pacchetti;
+  \item i nodi sorgente e destinazione sono fissi, mentre i nodi intermedi sono mobili e
+  fungono da \textit{relay};
+  \item il modello è basato su due code che sono servite in alternanza da un singolo server.
+  Il server è autonomo e non c'è modo di controllarne il movimento.
+
+\end{enumerate}
+
+\section{Modello}
+% metti figura 1 dell'articolo
+\section{Implementazione}
+% divisione del codice sorgente.. ecc.. come si è implementato ogni requisito del modello
+- estensione del namespace queueing con classe OppQueue che riprende comportamento e variabili
+della Queue, estendendoli ai fini del modello
+
+\section{Analisi}
+\subsection{Configurazione}
+Python 2.x o Python 3.x
+Python package da installare
+sudo pip (pip3) install ipython jupyter
+sudo pip (pip3) install numpy pandas matplotlib
+sudo pip (pip3) install scipy pivottablejs
+
+\subsection{Risultati}
+
+\section{Conclusioni}
+
+\section{Bibliografia}
+% articolo originale
+% tutorial omnet
 \end{document}

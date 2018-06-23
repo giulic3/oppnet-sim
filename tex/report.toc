@@ -1,0 +1,10 @@
+\select@language {italian}
+\select@language {italian}
+\contentsline {section}{\numberline {1}Introduzione}{1}
+\contentsline {section}{\numberline {2}Modello}{2}
+\contentsline {section}{\numberline {3}Implementazione}{2}
+\contentsline {section}{\numberline {4}Analisi}{2}
+\contentsline {subsection}{\numberline {4.1}Configurazione}{2}
+\contentsline {subsection}{\numberline {4.2}Risultati}{3}
+\contentsline {section}{\numberline {5}Conclusioni}{3}
+\contentsline {section}{\numberline {6}Bibliografia}{3}
