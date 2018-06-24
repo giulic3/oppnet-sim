@@ -16,7 +16,7 @@
 #include "OppQueue.h"
 #include "Job.h"
 
-#define PRIORITY_GATE 0 //TODO sono necessari due gate?
+#define PRIORITY_GATE 0
 #define NORMAL_GATE 1
 
 namespace queueing {
@@ -54,7 +54,6 @@ void OppQueue::initialize() {
     visitTime = par("visitTime");
     switchOverTime = par("switchOverTime");
     serverIsAvailable = par("serverIsAvailable"); // must be true for Q1 at the beginning
-    //serverIsIdle = true;
 
     startSwitchEvent = new cMessage("start-switch-event");
     endSwitchOverTimeEvent = new cMessage("start-switch-over-time-event");
@@ -70,7 +69,6 @@ void OppQueue::handleMessage(cMessage *msg) {
     // self-messages
     if (msg == startSwitchEvent) {
         // if the server is processing a job now, it must be interrupted
-        //if (serverIsIdle == false) {
         if (jobServiced) {
             EV << "Job interrupted! It will be processed next time" << endl;
             // take current job and enqueue to process it next time
@@ -79,7 +77,6 @@ void OppQueue::handleMessage(cMessage *msg) {
             emit(queueLengthSignal, length());
             job->setQueueCount(job->getQueueCount() + 1);
             jobServiced = nullptr;
-            //serverIsIdle = true;
 
         }
         serverIsAvailable = false;
@@ -101,14 +98,12 @@ void OppQueue::handleMessage(cMessage *msg) {
         serverIsAvailable = true;
         if (queue.isEmpty()) {
             jobServiced = nullptr;
-            //serverIsIdle = true;
             emit(busySignal, false);
         }
         else {
             // process all the jobs that were interrupted or arrived
             // when the server was unavailable
             jobServiced = getFromQueue();
-            //serverIsIdle = false;
             emit(queueLengthSignal, length());
             simtime_t serviceTime = startService(jobServiced);
             scheduleAt(simTime()+serviceTime, endServiceMsg);
@@ -124,7 +119,6 @@ void OppQueue::handleMessage(cMessage *msg) {
                 endService(jobServiced, NORMAL_GATE);
                 if (queue.isEmpty()) {
                     jobServiced = nullptr;
-                    //serverIsIdle = true;
                     emit(busySignal, false);
                 }
                 else {
@@ -136,7 +130,6 @@ void OppQueue::handleMessage(cMessage *msg) {
             }
             else { // a message of another type has arrived
                 EV << "Generic message/job" << endl;
-                //serverIsIdle = false;
                 Job *job = check_and_cast<Job *>(msg);
                 arrival(job);
 

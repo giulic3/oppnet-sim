@@ -55,7 +55,6 @@ private:
 
 
     bool serverIsAvailable; // true if Q2 @ this location
-    bool serverIsIdle; // true if server associated is not processing any jobs
     bool isQ2LastLocation; // true if Q2 was here before and now must switch
 
 
