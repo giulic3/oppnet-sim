@@ -31,6 +31,10 @@ private:
     simsignal_t queueLengthSignal;
     simsignal_t queueingTimeSignal;
     simsignal_t busySignal;
+    // simsignal_t servedUsers;
+    // counter for total number of users served
+    // (how many packets arrived in the sink) look SinkExt
+
 
     Job *jobServiced;
     cMessage *endServiceMsg;
@@ -42,6 +46,7 @@ private:
 
     // visit time distribution at current location, @L1 or @L2
     simtime_t visitTime;
+    // time to switch from one position to the other
     simtime_t switchOverTime;
 
     cMessage *startSwitchEvent;
@@ -51,7 +56,7 @@ private:
 
     bool serverIsAvailable; // true if Q2 @ this location
     bool serverIsIdle; // true if server associated is not processing any jobs
-    bool isQ2LastLocation; // true if Q2 was here and must switch
+    bool isQ2LastLocation; // true if Q2 was here before and now must switch
 
 
 public:

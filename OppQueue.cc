@@ -66,13 +66,13 @@ void OppQueue::initialize() {
 
 void OppQueue::handleMessage(cMessage *msg) {
 
-    EV << "nome del messaggio " << msg->getName() << endl;
+    EV << "Message name" << msg->getName() << endl;
     // self-messages
     if (msg == startSwitchEvent) {
         // if the server is processing a job now, it must be interrupted
         //if (serverIsIdle == false) {
         if (jobServiced) {
-            EV << "job interrupted! it will be processed next time" << endl;
+            EV << "Job interrupted! It will be processed next time" << endl;
             // take current job and enqueue to process it next time
             Job *job = jobServiced;
             queue.insert(job);
@@ -97,7 +97,7 @@ void OppQueue::handleMessage(cMessage *msg) {
         //...
      }
     else if (strcmp(msg->getName(),"wake-up-server-event") == 0) {
-        EV << "in wake up server event" << endl;
+        EV << "In wake up server event" << endl;
         serverIsAvailable = true;
         if (queue.isEmpty()) {
             jobServiced = nullptr;
@@ -135,7 +135,7 @@ void OppQueue::handleMessage(cMessage *msg) {
                 }
             }
             else { // a message of another type has arrived
-                EV << "generic message/job" << endl;
+                EV << "Generic message/job" << endl;
                 //serverIsIdle = false;
                 Job *job = check_and_cast<Job *>(msg);
                 arrival(job);
@@ -144,7 +144,7 @@ void OppQueue::handleMessage(cMessage *msg) {
                     // processor was idle, not processing any job
                     jobServiced = job;
                     emit(busySignal, true);
-                    EV << "start service" << endl;
+                    EV << "Start service" << endl;
                     simtime_t serviceTime = startService(jobServiced);
                     scheduleAt(simTime()+serviceTime, endServiceMsg);
                 }
@@ -207,7 +207,7 @@ void OppQueue::arrival(Job *job) {
 }
 
 simtime_t OppQueue::startService(Job *job) {
-    // gather queueing time statistics
+    // gather queuing time statistics
     simtime_t d = simTime() - job->getTimestamp();
     emit(queueingTimeSignal, d);
     job->setTotalQueueingTime(job->getTotalQueueingTime() + d);
