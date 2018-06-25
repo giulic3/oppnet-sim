@@ -26,20 +26,31 @@ Define_Module(OppQueue);
 OppQueue::OppQueue() {
 
     jobServiced = nullptr;
+    jobInterrupted = nullptr;
+
     endServiceMsg = nullptr;
     startSwitchEvent = nullptr;
+    endSwitchOverTimeEvent = nullptr;
+    //wakeUpServerEvent = nullptr;
 }
 
 OppQueue::~OppQueue() {
 
     delete jobServiced;
+    delete jobInterrupted;
+
+    // prevent "undisposed object" warning
     cancelAndDelete(endServiceMsg);
+    cancelAndDelete(startSwitchEvent);
+    cancelAndDelete(endSwitchOverTimeEvent);
+    //cancelAndDelete(wakeUpServerEvent);
+
 }
 
 void OppQueue::initialize() {
 
     droppedSignal = registerSignal("dropped");
-    // time spent in the queue (time to be processed by the server excluded)
+    // time spent in the queue (excluded the time needed by the server to process it)
     queueingTimeSignal = registerSignal("queueingTime");
     queueLengthSignal = registerSignal("queueLength");
     emit(queueLengthSignal, 0);
@@ -53,29 +64,31 @@ void OppQueue::initialize() {
 
     visitTime = par("visitTime");
     switchOverTime = par("switchOverTime");
-    serverIsAvailable = par("serverIsAvailable"); // must be true for Q1 at the beginning
+    serverIsAvailable = par("serverIsAvailable"); // must be true for Q1 at the beginning, set in the simulation configuration
 
     startSwitchEvent = new cMessage("start-switch-event");
     endSwitchOverTimeEvent = new cMessage("start-switch-over-time-event");
-    wakeUpServerEvent = new cMessage("wake-up-server-event");
-
+    //wakeUpServerEvent = new cMessage("wake-up-server-event");
+    // fire the timer for S1/Q1
     if (serverIsAvailable)
         scheduleAt(simTime()+visitTime, startSwitchEvent);
 }
 
 void OppQueue::handleMessage(cMessage *msg) {
 
-    EV << "Message name" << msg->getName() << endl;
+    EV << "Message name " << msg->getName() << endl;
     // self-messages
     if (msg == startSwitchEvent) {
         // if the server is processing a job now, it must be interrupted
         if (jobServiced) {
             EV << "Job interrupted! It will be processed next time" << endl;
-            // take current job and enqueue to process it next time
-            Job *job = jobServiced;
-            queue.insert(job);
-            emit(queueLengthSignal, length());
-            job->setQueueCount(job->getQueueCount() + 1);
+            // take current job and save it temporarily to process it the next time the server becomes available
+            jobInterrupted = jobServiced;
+            //Job *job = jobServiced;
+            //queue.insert(job);
+            // put the interrupted job among the pending ones
+            emit(queueLengthSignal, length()+1);
+            jobInterrupted->setQueueCount(jobInterrupted->getQueueCount() + 1);
             jobServiced = nullptr;
 
         }
@@ -85,37 +98,51 @@ void OppQueue::handleMessage(cMessage *msg) {
         // start switchOverTime timer, when it ends switch has completed
         scheduleAt(simTime()+switchOverTime, endSwitchOverTimeEvent);
     }
+
     else if (msg == endSwitchOverTimeEvent) {
         // wake up the other queue
-        // TODO memory leak? chi li cancella?
         cMessage *wakeUpServerEvent = new cMessage("wake-up-server-event");
         cGate *out = gate("out", PRIORITY_GATE);
         send(wakeUpServerEvent, out);
-        //...
-     }
+    }
+
     else if (strcmp(msg->getName(),"wake-up-server-event") == 0) {
+
         EV << "In wake up server event" << endl;
         serverIsAvailable = true;
-        if (queue.isEmpty()) {
+
+        // first process the job that was interrupted (if any)
+        if (jobInterrupted) {
+            jobServiced = jobInterrupted;
+            jobInterrupted = nullptr;
+            emit(queueLengthSignal, length());
+            simtime_t serviceTime = startService(jobServiced);
+            scheduleAt(simTime()+serviceTime, endServiceMsg);
+        }
+
+        else if (queue.isEmpty()) {
             jobServiced = nullptr;
             emit(busySignal, false);
         }
+
         else {
-            // process all the jobs that were interrupted or arrived
-            // when the server was unavailable
+            // process all the jobs that arrived when the server was unavailable
             jobServiced = getFromQueue();
             emit(queueLengthSignal, length());
             simtime_t serviceTime = startService(jobServiced);
             scheduleAt(simTime()+serviceTime, endServiceMsg);
         }
-    cancelEvent(wakeUpServerEvent);
+
+    // this deletes the wakeUpServerEvent initialized in the other queue
+    cancelAndDelete(msg);
     scheduleAt(simTime()+visitTime, startSwitchEvent);
     }
+
     else {
         if (serverIsAvailable) { // means Q2 is @ current location
             // other messages
             if (msg == endServiceMsg) {
-                EV << "end service msg" << endl;
+                EV << "End service msg" << endl;
                 endService(jobServiced, NORMAL_GATE);
                 if (queue.isEmpty()) {
                     jobServiced = nullptr;
@@ -157,11 +184,10 @@ void OppQueue::handleMessage(cMessage *msg) {
                 }
             }
         }
-        // if the server is not available, msg is enqueued but will be processed next time
-        else { // TODO cosa succede quando arriva un endservicemsg ma il server non è available?
+        // if the server is not available, the job is enqueued and will be processed next time
+        else {
 
             if (strcmp(msg->getName(),"end-service") != 0) {
-                EV << "casting 2? " << endl;
                 Job *job = check_and_cast<Job *>(msg);
                 arrival(job);//
                 this->queue.insert(job);

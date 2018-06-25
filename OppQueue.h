@@ -37,7 +37,8 @@ private:
 
 
     Job *jobServiced;
-    cMessage *endServiceMsg;
+    // pointer to the job that was interrupted because the server went down
+    Job *jobInterrupted;
     cQueue queue;
     int capacity;
     bool fifo;
@@ -49,9 +50,10 @@ private:
     // time to switch from one position to the other
     simtime_t switchOverTime;
 
+    cMessage *endServiceMsg;
     cMessage *startSwitchEvent;
     cMessage *endSwitchOverTimeEvent;
-    cMessage *wakeUpServerEvent;
+    //cMessage *wakeUpServerEvent;
 
 
     bool serverIsAvailable; // true if Q2 @ this location
@@ -62,8 +64,6 @@ public:
     OppQueue();
     virtual ~OppQueue();
     int length();
-
-    // TODO: add getters/setters
 
 protected:
     virtual void initialize() override;
@@ -77,5 +77,5 @@ protected:
     virtual void endService(Job *job, int gateIndex);
 };
 
-}; //namespace
+}; // namespace
 #endif /* OPPQUEUE_H_ */
