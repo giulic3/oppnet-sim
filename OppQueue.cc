@@ -237,6 +237,7 @@ simtime_t OppQueue::startService(Job *job) {
 
 void OppQueue::endService(Job *job, int gateIndex) {
     EV << "Finishing service of " << job->getName() << endl;
+    // measuring job service time
     simtime_t d = simTime() - job->getTimestamp();
     job->setTotalServiceTime(job->getTotalServiceTime() + d);
     cGate *out = gate("out", gateIndex);
