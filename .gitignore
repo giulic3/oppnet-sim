@@ -1,0 +1,35 @@
+-# compilation results
+out/
+
+# simulation results
+results/
+-
+# compiled object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# compiled dynamic libraries
+*.so
+*.dylib
+*.dll
+-
+# compiled static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# executables
+*.exe
+*.out
+*.app
+oppnet-sim
+oppnet-sim_dbg
+
+# latex build files
+*.aux
+*.fdb_latexmk
+*.log
+*.fls
