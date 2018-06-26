@@ -35,22 +35,25 @@ BatchMeans <- function(x, numBatches, numObs) {
   #}
   }
   finalMean <- mean(means)
-  standardDeviation <- sd(means)
-  # anche varianza?
-  #confidenceIntervalLeft <-
-  #confidenceIntervalRight <-
+  variance <- var(means)
+  n <- length(means)
+  # confidence level 95%, qt quantile function, df degrees of freedom
+  a <- qt(0.975, df = n -1) * sqrt(variance/n)
+  confidenceIntervalLeft <- finalMean - a
+  confidenceIntervalRight <- finalMean + a
 
-  
-
-  return c(finalMean, standardDeviation, confidenceIntervalLeft, confidenceIntervalRight)
+  return c(finalMean, variance, confidenceIntervalLeft, confidenceIntervalRight)
 
 }
 
 results = BatchMeans(X, N, n)
+print(results)
+
 a <- r[1]
 b <- r[2]
 c <- r[3]
 d <- r[4]
+
 
 # batchMeans(totalServiceTimes,0,0)
 # batchMeans(numberOfJobs,0,0)
