@@ -1,20 +1,19 @@
 # batch analysis
 # first execute scavetool x *.sca -o oppnet-sim.csv or use omnet editor
-# TODO check which logs must be analyzed and automate the creation of .csv or use .json
-# perché ad ogni export ho sempre lo stesso numero di record?
 
-# how to run a R script
-# on Linux with output and input redirection
+# how to run a R script with output and input redirection
 # R CMD BATCH [options] my_script.R [outfile]
-# with output to the terminal
+# or with output to the terminal
 # Rscript analysis.R
 
 # change to the R script directory
 setwd("/home/giulia/git/oppnet-sim/")
+# alternatively, set the absolute path when reading csv
 
-# reads into a frame data?
-simData <- read.csv("./results/oppnet-sim.csv", header=TRUE, sep=',')
-dim(simData)
+# reads into a data frame
+simData <- read.csv("./results/Q1length.csv", header=TRUE, sep=',')
+print("data dimension: \n")
+head(simData)
 
 # RemoveWarmUpPeriod or RemoveInitialTransient... to remove the first m data
 
@@ -34,11 +33,11 @@ BatchMeans <- function(x, numBatches, numObs) {
     b <- i * numObs # not sure
     cat('a =', a, 'b =',b,'\n')
 
-     # extract the vector portion that contains the batch
+    # extract the vector portion that contains the batch
     batch <- x[a:b]
     # compute mean removing missing values
     means[i] <- mean(batch, na.rm=TRUE)
-    cat('mean =',means[i],'\n')
+    cat('mean =', means[i],'\n')
 
   #}
   }
@@ -47,6 +46,7 @@ BatchMeans <- function(x, numBatches, numObs) {
   n <- length(means)
   # confidence level 95%, qt quantile function, df degrees of freedom
   a <- round(qt(0.975, df = n -1) * sqrt(variance/n), digits=2)
+  # quantile(x, probs=0.25,...)
   confidenceIntervalLeft <- round(finalMean - a, digits=2)
   confidenceIntervalRight <- round(finalMean + a, digits=2)
 
@@ -59,13 +59,13 @@ X <- c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,6,5,55,3,4,1)
 N <- 2
 n <- 5
 
-results = BatchMeans(X, N, n)
-print(results)
+#results = BatchMeans(X, N, n)
+#print(results)
 
-a <- results[1]
-b <- results[2]
-c <- results[3]
-d <- results[4]
+#a <- results[1]
+#b <- results[2]
+#c <- results[3]
+#d <- results[4]
 
 # only for testing purposes
 times <- c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20)
