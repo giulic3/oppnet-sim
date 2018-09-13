@@ -1,4 +1,4 @@
--# compilation results
+# compilation results
 out/
 
 # simulation results
@@ -29,7 +29,11 @@ oppnet-sim
 oppnet-sim_dbg
 
 # latex build files
-*.aux
-*.fdb_latexmk
-*.log
-*.fls
+tex/*.aux
+tex/*.fdb_latexmk
+tex/*.log
+tex/*.fls
+tex/*.synctex.gz
+
+# hidden files
+.*
