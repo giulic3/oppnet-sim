@@ -11,42 +11,30 @@ setwd("/home/giulia/git/oppnet-sim/")
 # alternatively, set the absolute path when reading csv
 
 # reads omnetpp vectors into data frames
-q1Length = read.csv("./results/q1length.csv", header=TRUE, sep=',')
-q2Length = read.csv("./results/q2length.csv", header=TRUE, sep=',')
-q3Length = read.csv("./results/q3length.csv", header=TRUE, sep=',')
-#totalServiceTime = read.csv("./results/totalservicetime.csv", header=TRUE, sep=',')
-
-# TODO see if exists a built in function for array traslation
-# x = vector containing the values
-# k = number of the first observations to ignore
-RemoveWarmUpPeriod <- function(x, k) { # or RemoveInitialTransient
-    dimY <- length(x) - k
-    y <- rep(0, dimY)
-    for (i in 1:dimY)
-        y[i] <- x[i + k]
-
-    return (y)
-}
+q1Length <- read.csv("./results/q1length.csv", header=TRUE, sep=',')
+q2Length <- read.csv("./results/q2length.csv", header=TRUE, sep=',')
+q3Length <- read.csv("./results/q3length.csv", header=TRUE, sep=',')
+# lifeTime of a job from source to sink
+lifeTime <- read.csv("./results/lifetime.csv", header=TRUE, sep=',')
+#totalQueuingTime <- read.csv("./results/totalqueuingtime.csv", header=TRUE, sep=',')
+#totalServiceTime <- read.csv("./results/totalservicetime.csv", header=TRUE, sep=',')
 
 # x = vector containing the values
+# k = number of the first observations to ignore (to exclude warm up period)
 # numBatches = number of batches
 # numObs = number of observations per batch
-BatchMeans <- function(x, numBatches, numObs) {
+BatchMeans <- function(x, k, numBatches, numObs) {
 
-    if (numBatches * numObs > length(x))
-        cat('error!')
-        # TODO should exit
+    stopifnot(k + numBatches * numObs <= length(x))
     # initialize an array filled with 0s
     means <- rep(0, numBatches)
 
     # repeat numBatches times
     for (i in 1:numBatches) {
         cat('iteration: ', i,'\n')
-        #for (j in numObs)
-        a <- (i-1) * numObs + 1 # not sure
-        b <- i * numObs # not sure
+        a <- (i-1) * numObs + 1 + k
+        b <- i * numObs + k
         cat('a =', a, 'b =',b,'\n')
-
         # extract the vector portion that contains the batch
         batch <- x[a:b]
         # compute mean removing missing values
@@ -68,19 +56,22 @@ BatchMeans <- function(x, numBatches, numObs) {
     return (c(finalMean, variance, confidenceIntervalLeft, confidenceIntervalRight))
 }
 
+q1LengthVector <- q1Length[,2]
+q2LengthVector <- q2Length[,2]
+q3LengthVector <- q3Length[,2]
+lifeTimeVector <- lifeTime[,2]
 
+results <- matrix(data=0, nr=4, nc=4)
 
-q1LengthVector = q1Length[,2]
-q2LengthVector = q2Length[,2]
-#q3LengthVector = q3Length[,2]
-# TODO need to sum total service time and total queueing time?
-#totalServiceTimeVector = totalServiceTime[,2]
-#totalQueueingTimeVector
+results[1,] <- BatchMeans(q1Length[,2], k=1000, numBatches=13, numObs=700)
+results[2,] <- BatchMeans(q2Length[,2], k=1000, numBatches=13, numObs=700)
+results[3,] <- BatchMeans(q3Length[,2], k=1000, numBatches=13, numObs=700)
+results[4,] <- BatchMeans(lifeTime[,2], k=1000, numBatches=9, numObs=300)
 
-newX <- RemoveWarmUpPeriod(q1LengthVector, 1000)
-results <- BatchMeans(newX, 13, 700)
 #avgSojournTime =
 #avgUsers =
 
-cat('results are:\nfinalMean = ', results[1],'\nvariance = ', results[2],
-'\nconfidenceInterval = (', results[3], ',', results[4], ')\n')
+for (i in 1:4) {
+    cat('results are:\nfinalMean = ', r[i,1],'\nvariance = ', r[i,2],
+    '\nconfidenceInterval = (', r[i,3], ',', r[i,4], ')\n\n')
+}
