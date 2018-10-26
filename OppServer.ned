@@ -16,7 +16,7 @@
 package org.omnetpp.queueing;
 
 //
-// Queue server. It serves multiple input queues (PassiveQueue), using a preset
+// Queue server. It serves multiple input queues (PassiveQueue), using an opportunistic
 // algorithm. Inputs must be connected to Passive Queues (PassiveQueue)
 //
 simple OppServer
@@ -27,9 +27,13 @@ simple OppServer
         @signal[busy](type="bool");
         @statistic[busy](title="server busy state";record=vector?,timeavg;interpolationmode=sample-hold);
 
-        string fetchingAlgorithm @enum("priority","random","roundRobin","longestQueue") = default("priority");
-             // how the next job will be choosen from the attached queues
-        volatile double serviceTimeQ1 @unit(s); // service time of a job
+        volatile double serviceTime @unit(s);
+        volatile double switchOverTime @unit(s);
+        volatile double Q1visitTime @unit(s);
+        volatile double Q2visitTime @unit(s);
+        bool isServingQ1 = default(true);
+        
+        
     gates:
         input in[];
         output out[];
