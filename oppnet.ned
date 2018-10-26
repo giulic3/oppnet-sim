@@ -20,36 +20,38 @@ package org.omnetpp.queueing;
 
 network OppNet
 {
-    @display("bgb=487,190");
+    @display("bgb=539.32,277.42");
     submodules:
         source: Source {
             @display("p=43,82");
         }
 
-        Q1: OppQueue {
+        Q1: PassiveQueue {
             @display("p=140,82");
-
-            serverIsAvailable = true;
         }
 
-        Q2: OppQueue {
-            @display("p=230,82");
+        Q2: PassiveQueue {
+            @display("p=246.38002,81.48");
+        }
+
+        S: OppServer {
+            @display("p=246.38002,197.88");
         }
 
         Q3: Queue {
-            @display("p=312,82");
+            @display("p=355.99002,81.48");
         }
 
         sink: Sink {
-            @display("p=421,82");
+            @display("p=482.09003,81.48");
         }
 
     connections:
-        source.out --> Q1.in++;
+        source.out --> Q1.in[0];
+        Q1.out[0] --> S.in[0];
+        S.out[0] --> Q2.in[0]; // first S1 out goes to Q2
+        Q2.out[0] --> S.in[1];
+        S.out[1] --> Q3.in[0]; // second S2 out goes to Q3
         Q3.out --> sink.in++;
-        Q1.out++ --> Q2.in++; // should be a channel? TODO
-        Q1.out++ --> Q2.in++;
-        Q2.out++ --> Q1.in++;
-        Q2.out++ --> Q3.in++;
 }
 

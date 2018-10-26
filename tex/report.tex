@@ -78,6 +78,17 @@ della Queue, estendendoli ai fini del modello
 % sudo pip (pip3) install numpy pandas matplotlib
 % sudo pip (pip3) install scipy pivottablejs
 
+% cose utili per eseguire la simulazione (cmd line)
+% per vedere quante run sono state configurate (es. se c'è un par che cambia)
+$ ./oppnet-sim -u Cmdenv -x General -g
+% eseguire la simulazione da riga di comando
+$ ./oppnet-sim -m -n .:../../Scaricati/omnetpp-5.4/samples/queueinglib -l ../../Scaricati/omnetpp-5.4/samples/queueinglib/queueinglib omnetpp.ini
+% eseguire una run specifica (es. la 0)
+$ ./oppnet-sim blablabla -u Cmdenv -c General -r 0
+% eseguirle tutte (ma se una crasha, crasha tutto)
+$ ./oppnet-sim blablabla -u Cmdenv -c General % per l'interfaccia grafica usare Qtenv
+% oppure usare opp_runall e lanciarne una per una (meglio per debugging) TODO
+
 \subsection{Risultati}
 
 \section{Conclusioni}

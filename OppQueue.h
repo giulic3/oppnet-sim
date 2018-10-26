@@ -31,10 +31,6 @@ private:
     simsignal_t queueLengthSignal;
     simsignal_t queueingTimeSignal;
     simsignal_t busySignal;
-    // simsignal_t servedUsers;
-    // counter for total number of users served
-    // (how many packets arrived in the sink) look SinkExt
-
 
     Job *jobServiced;
     // pointer to the job that was interrupted because the server went down
@@ -49,6 +45,8 @@ private:
     simtime_t visitTime;
     // time to switch from one position to the other
     simtime_t switchOverTime;
+    simtime_t jobInterruptedTime; // time spent by a job in queue before being interrupted
+    simtime_t jobInterruptedSimTime;
 
     cMessage *endServiceMsg;
     cMessage *startSwitchEvent;
