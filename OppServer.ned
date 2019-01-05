@@ -26,15 +26,20 @@ simple OppServer
         @display("i=block/server");
         @signal[busy](type="bool");
         @statistic[busy](title="server busy state";record=vector?,timeavg;interpolationmode=sample-hold);
+		
+		// not really needed
+		string fetchingAlgorithm @enum("priority","random","roundRobin","longestQueue") = default("priority");
+		
 
         volatile double serviceTime @unit(s);
         volatile double switchOverTime @unit(s);
         volatile double Q1visitTime @unit(s);
         volatile double Q2visitTime @unit(s);
         bool isServingQ1 = default(true);
+        bool serverIsAvailable = default(true);
         
         
     gates:
-        input in[];
-        output out[];
+        input in[2];
+        output out[2];
 }

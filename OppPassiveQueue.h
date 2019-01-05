@@ -13,55 +13,47 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-#ifndef OPPSERVER_H_
-#define OPPSERVER_H_
+#ifndef OPPPASSIVEQUEUE_H_
+#define OPPPASSIVEQUEUE_H_
 
-#include "IServer.h"
+#include "QueueingDefs.h"
+#include "IPassiveQueue.h"
+#include "SelectionStrategies.h"
+#include "Job.h"
 
 namespace queueing {
 
-class Job;
-class SelectionStrategy;
 
-class OppServer : public cSimpleModule, public IServer{
+class OppPassiveQueue : public cSimpleModule, public IPassiveQueue {
 
 private:
-    simsignal_t busySignal;
-    bool allocated;
-    bool isServingQ1;
-    bool serverIsAvailable;
+    simsignal_t droppedSignal;
+    simsignal_t queueLengthSignal;
+    simsignal_t queueingTimeSignal;
 
+    bool fifo;
+    int capacity;
+    cQueue queue;
     SelectionStrategy *selectionStrategy;
 
-    simtime_t serviceTime;
-    // time to switch from one position/queue to the other
-    simtime_t switchOverTime;
-    simtime_t Q1visitTime;
-    simtime_t Q2visitTime;
 
-    Job *jobServiced;
-    Job *jobInterrupted;
-    cMessage *endServiceMsg;
-    cMessage *startSwitchEvent;
-    cMessage *endSwitchOverTimeEvent;
-
-
-public:
-    OppServer();
-    virtual ~OppServer();
+    void queueLengthChanged();
+    void sendJob(Job *job, int gateIndex);
 
 protected:
     virtual void initialize() override;
-    virtual int numInitStages() const override {return 2;}
     virtual void handleMessage(cMessage *msg) override;
     virtual void refreshDisplay() const override;
-    virtual void finish() override;
+
 
 public:
-    virtual bool isIdle() override;
-    virtual void allocate() override;
+    OppPassiveQueue();
+    virtual ~OppPassiveQueue();
+    // The following methods are called from IServer:
+    virtual int length() override;
+    virtual void request(int gateIndex) override;
 };
 
 } /* namespace queueing */
 
-#endif /* OPPSERVER_H_ */
+#endif /* OPPPASSIVEQUEUE_H_ */

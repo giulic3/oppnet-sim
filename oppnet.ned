@@ -26,11 +26,11 @@ network OppNet
             @display("p=43,82");
         }
 
-        Q1: PassiveQueue {
+        Q1: OppPassiveQueue {
             @display("p=140,82");
         }
 
-        Q2: PassiveQueue {
+        Q2: OppPassiveQueue {
             @display("p=246.38002,81.48");
         }
 
@@ -47,11 +47,11 @@ network OppNet
         }
 
     connections:
-        source.out --> Q1.in[0];
-        Q1.out[0] --> S.in[0];
-        S.out[0] --> Q2.in[0]; // first S1 out goes to Q2
-        Q2.out[0] --> S.in[1];
-        S.out[1] --> Q3.in[0]; // second S2 out goes to Q3
+        source.out --> Q1.in++;
+        Q1.out++ --> S.in[0];
+        S.out[0] --> Q2.in++; // first S1 out goes to Q2
+        Q2.out++ --> S.in[1];
+        S.out[1] --> Q3.in++; // second S2 out goes to Q3
         Q3.out --> sink.in++;
 }
 
