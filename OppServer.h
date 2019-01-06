@@ -57,6 +57,7 @@ protected:
     virtual void refreshDisplay() const override;
     virtual void finish() override;
 
+
 public:
     virtual bool isIdle() override;
     virtual void allocate() override;

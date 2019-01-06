@@ -78,17 +78,15 @@ void OppServer::handleMessage(cMessage *msg) {
     // self-messages
     if (msg == startSwitchEvent) {
         // TODO implement later: the server becomes unavailable/idle... does nothing
-        if (jobServiced)
          serverIsAvailable = false;
          scheduleAt(simTime()+switchOverTime, endSwitchOverTimeEvent);
-    }
 
+    }
     else if (msg == endSwitchOverTimeEvent) {
         // TODO server becomes available again...
-        // invert isServingQ1 (from 0 to 1 and viceversa)
+        // invert isServingQ1 (0 to 1 and 1 to 0)
         serverIsAvailable = true;
         isServingQ1 = !isServingQ1;
-        // EV << "In handleMessage(), after switch isServingQ1 becomes " << isServingQ1 << "\n";
 
         if (isServingQ1)
            scheduleAt(simTime()+Q1visitTime, startSwitchEvent);
@@ -96,25 +94,22 @@ void OppServer::handleMessage(cMessage *msg) {
            scheduleAt(simTime()+Q2visitTime, startSwitchEvent);
 
         // check if serving Q1 or Q2, then request a job
-         cGate *inGate = nullptr;
+        cGate *inGate = nullptr;
 
-         if (isServingQ1)
-             inGate = selectionStrategy->selectableGate(0);
-         else
-             inGate = selectionStrategy->selectableGate(1);
-         // cast the CModule* to IPassiveQueue and in the meantime request a new job
-         // this fails if the queue is empty...
+        if (isServingQ1)
+            inGate = selectionStrategy->selectableGate(0);
+        else
+            inGate = selectionStrategy->selectableGate(1);
 
-         try {
-             check_and_cast<IPassiveQueue *>(inGate->getOwnerModule())->request(inGate->getIndex());
-         }
-         catch(int e) {
-             EV << "requesting job from an empty queue";
-         }
+        try {
+            check_and_cast<IPassiveQueue *>(inGate->getOwnerModule())->request(inGate->getIndex());
+        }
+        catch(int e) {
+            EV << "requesting job from an empty queue";
+        }
     }
     else if (msg == endServiceMsg) {
-        // ASSERT(jobServiced != nullptr);
-        // ASSERT(allocated);
+
         simtime_t d = simTime() - endServiceMsg->getSendingTime();
         jobServiced->setTotalServiceTime(jobServiced->getTotalServiceTime() + d);
 
@@ -142,8 +137,6 @@ void OppServer::handleMessage(cMessage *msg) {
                 inGate = selectionStrategy->selectableGate(0);
             else
                 inGate = selectionStrategy->selectableGate(1);
-            // cast the CModule* to IPassiveQueue and in the meantime request a new job
-            // this fails if the queue is empty...
 
             try {
                 check_and_cast<IPassiveQueue *>(inGate->getOwnerModule())->request(inGate->getIndex());
@@ -155,6 +148,7 @@ void OppServer::handleMessage(cMessage *msg) {
     }
     // a new job arrives
     else {
+        EV << "A new job has arrived. Server is available? " << serverIsAvailable << "\n";
         if (serverIsAvailable) {
             if (!allocated)
                 error("job arrived, but the sender did not call allocate() previously");
