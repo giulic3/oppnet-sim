@@ -58,7 +58,7 @@ private:
 
     bool serverIsAvailable; // true if Q2 @ this location
     bool isQ2LastLocation; // true if Q2 was here before and now must switch
-
+    bool goIdle;
 
 public:
     OppQueue();

@@ -65,6 +65,7 @@ void OppQueue::initialize() {
     visitTime = par("visitTime");
     switchOverTime = par("switchOverTime");
     serverIsAvailable = par("serverIsAvailable"); // must be true for Q1 at the beginning, set in the simulation configuration
+    goIdle = false; // true if the server must go idle
 
     startSwitchEvent = new cMessage("start-switch-event");
     endSwitchOverTimeEvent = new cMessage("start-switch-over-time-event");
@@ -79,27 +80,22 @@ void OppQueue::handleMessage(cMessage *msg) {
     EV << "Message name " << msg->getName() << endl;
     // self-messages
     if (msg == startSwitchEvent) {
-        // if the server is processing a job now, it must be interrupted
+        // if the server is processing a job now, finish its service and then go idle
         if (jobServiced) {
-            EV << "Job interrupted! It will be processed next time" << endl;
-            // take current job and save it temporarily to process it the next time the server becomes available
-            jobInterrupted = jobServiced;
-            //Job *job = jobServiced;
-            //queue.insert(job);
-            // put the interrupted job among the pending ones
-            emit(queueLengthSignal, length()+1);
-            jobInterrupted->setQueueCount(jobInterrupted->getQueueCount() + 1);
-            jobServiced = nullptr;
-
+            goIdle = true;
+            serverIsAvailable = false;
         }
-        serverIsAvailable = false;
-        cancelEvent(endServiceMsg);
-        EV << "serverIsAvailable = false" << endl;
-        // start switchOverTime timer, when it ends switch has completed
-        scheduleAt(simTime()+switchOverTime, endSwitchOverTimeEvent);
+        else {
+            serverIsAvailable = false;
+            cancelEvent(endServiceMsg);
+            EV << "serverIsAvailable = false" << endl;
+            // start switchOverTime timer, when it ends switch has completed
+            scheduleAt(simTime()+switchOverTime, endSwitchOverTimeEvent);
+        }
     }
 
     else if (msg == endSwitchOverTimeEvent) {
+        goIdle = false;
         // wake up the other queue
         cMessage *wakeUpServerEvent = new cMessage("wake-up-server-event");
         cGate *out = gate("out", PRIORITY_GATE);
@@ -111,20 +107,10 @@ void OppQueue::handleMessage(cMessage *msg) {
         EV << "In wake up server event" << endl;
         serverIsAvailable = true;
 
-        // first process the job that was interrupted (if any)
-        if (jobInterrupted) {
-            jobServiced = jobInterrupted;
-            jobInterrupted = nullptr;
-            emit(queueLengthSignal, length());
-            simtime_t serviceTime = startService(jobServiced);
-            scheduleAt(simTime()+serviceTime, endServiceMsg);
-        }
-
-        else if (queue.isEmpty()) {
+        if (queue.isEmpty()) {
             jobServiced = nullptr;
             emit(busySignal, false);
         }
-
         else {
             // process all the jobs that arrived when the server was unavailable
             jobServiced = getFromQueue();
@@ -142,6 +128,7 @@ void OppQueue::handleMessage(cMessage *msg) {
         if (serverIsAvailable) { // means Q2 is @ current location
             // other messages
             if (msg == endServiceMsg) {
+
                 EV << "End service msg" << endl;
                 endService(jobServiced, NORMAL_GATE);
                 if (queue.isEmpty()) {
@@ -154,6 +141,8 @@ void OppQueue::handleMessage(cMessage *msg) {
                     simtime_t serviceTime = startService(jobServiced);
                     scheduleAt(simTime()+serviceTime, endServiceMsg);
                 }
+
+
             }
             else { // a message of another type has arrived
                 EV << "Generic message/job" << endl;
@@ -184,18 +173,21 @@ void OppQueue::handleMessage(cMessage *msg) {
                 }
             }
         }
-        // if the server is not available, the job is enqueued and will be processed next time
-        else {
+    // if the server is not available, the job is enqueued and will be processed next time
+    else {
+        if (msg == endServiceMsg && goIdle) {
+            scheduleAt(simTime()+switchOverTime, endSwitchOverTimeEvent);
+        }
 
-            if (strcmp(msg->getName(),"end-service") != 0) {
-                Job *job = check_and_cast<Job *>(msg);
-                arrival(job);//
-                this->queue.insert(job);
-                emit(queueLengthSignal, length());
-                job->setQueueCount(job->getQueueCount() + 1);
-            }
+        if (strcmp(msg->getName(),"end-service") != 0) {
+            Job *job = check_and_cast<Job *>(msg);
+            arrival(job);//
+            this->queue.insert(job);
+            emit(queueLengthSignal, length());
+            job->setQueueCount(job->getQueueCount() + 1);
         }
     }
+}
 
 }
 
