@@ -72,7 +72,7 @@ void OppPassiveQueue::handleMessage(cMessage *msg) {
         job->setQueueCount(job->getQueueCount() + 1);
     }
     else if (length() == 0) {
-        // send through without queueing
+        // send through without queuing
         sendJob(job, k);
     }
     else
