@@ -13,6 +13,9 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
+/*
+ * */
+
 #include "OppPassiveQueue.h"
 #include "Job.h"
 #include "IServer.h"
@@ -51,6 +54,8 @@ void OppPassiveQueue::initialize() {
 }
 
 void OppPassiveQueue::handleMessage(cMessage *msg) {
+    EV << "Message name " << msg->getName() << endl;
+
     Job *job = check_and_cast<Job *>(msg);
     job->setTimestamp();
 
@@ -63,7 +68,7 @@ void OppPassiveQueue::handleMessage(cMessage *msg) {
         delete msg;
         return;
     }
-
+    /*
     int k = selectionStrategy->select();
     if (k < 0) {
         // enqueue if no idle server found
@@ -78,6 +83,11 @@ void OppPassiveQueue::handleMessage(cMessage *msg) {
     else
         return;
         // throw cRuntimeError("This should not happen. Queue is NOT empty and there is an IDLE server attached to us.");
+    */
+    // always enqueue, the passive queue has to wait for a server request
+    queue.insert(job);
+    emit(queueLengthSignal, length());
+    job->setQueueCount(job->getQueueCount() + 1);
 }
 
 void OppPassiveQueue::refreshDisplay() const {
@@ -114,9 +124,10 @@ void OppPassiveQueue::request(int gateIndex) {
 
         sendJob(job, gateIndex);
     }
-    else
+    else {
+        EV << "The server requested a job, but this queue is empty..." << endl;
         return;
-
+    }
 }
 
 void OppPassiveQueue::sendJob(Job *job, int gateIndex) {

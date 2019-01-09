@@ -75,6 +75,8 @@ void OppServer::initialize() {
 
 void OppServer::handleMessage(cMessage *msg) {
 
+    EV << "Message name " << msg->getName() << endl;
+
     // self-messages
     if (msg == startSwitchEvent) {
          serverIsAvailable = false;
@@ -98,12 +100,15 @@ void OppServer::handleMessage(cMessage *msg) {
 
         if (isServingQ1)
             inGate = selectionStrategy->selectableGate(0);
-        else
+        else {
+            EV << "endSwitchOverTimeEvent: in else" << endl;
             inGate = selectionStrategy->selectableGate(1);
+        }
 
         try {
             // if (!jobServiced)
-            EV << "requesting a job, gate index: " << inGate->getIndex() << endl;
+            EV << "requesting a job, gate, getOwnerModule: " << inGate << " " << inGate->getOwnerModule() << endl;
+            // inGate->getIndex() refers to the indexing of the PassiveQueue, not of the Server!
                 check_and_cast<IPassiveQueue *>(inGate->getOwnerModule())->request(inGate->getIndex());
         }
         catch(int e) {
@@ -137,11 +142,12 @@ void OppServer::handleMessage(cMessage *msg) {
 
             if (isServingQ1)
                 inGate = selectionStrategy->selectableGate(0);
-            else
+            else {
+                EV << "endServiceMsg: in else" << endl;
                 inGate = selectionStrategy->selectableGate(1);
-
+            }
             try {
-                EV << "requesting a job, gate index: " << inGate->getIndex() << endl;
+                EV << "requesting a job, gate, getOwnerModule: " << inGate << " " << inGate->getOwnerModule() << endl;
                 check_and_cast<IPassiveQueue *>(inGate->getOwnerModule())->request(inGate->getIndex());
             }
             catch(int e) {

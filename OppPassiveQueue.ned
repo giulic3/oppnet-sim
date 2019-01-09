@@ -31,6 +31,7 @@ simple OppPassiveQueue
         bool fifo = default(true);   // whether the module works as a queue (fifo=true) or a stack (fifo=false)
         string sendingAlgorithm @enum("priority","random","roundRobin","minDelay") = default("priority");
                                      // how the queue tries to find a suitable server for an incoming job
+                                     // not really needed
     gates:
         input in[];
         output out[];
