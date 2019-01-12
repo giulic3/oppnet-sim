@@ -6,6 +6,7 @@
 # or with output to the terminal
 # Rscript analysis.R
 
+# TODO
 # change to the R script directory
 setwd("/home/giulia/git/oppnet-sim/")
 # alternatively, set the absolute path when reading csv
@@ -16,14 +17,13 @@ q2Length <- read.csv("./results/q2length.csv", header=TRUE, sep=',')
 q3Length <- read.csv("./results/q3length.csv", header=TRUE, sep=',')
 # lifeTime of a job from source to sink
 lifeTime <- read.csv("./results/lifetime.csv", header=TRUE, sep=',')
-#totalQueuingTime <- read.csv("./results/totalqueuingtime.csv", header=TRUE, sep=',')
-#totalServiceTime <- read.csv("./results/totalservicetime.csv", header=TRUE, sep=',')
 
 # x = vector containing the values
 # k = number of the first observations to ignore (to exclude warm up period)
 # numBatches = number of batches
 # numObs = number of observations per batch
-BatchMeans <- function(x, k, numBatches, numObs) {
+# dprecision = number of digits after comma
+BatchMeans <- function(x, k, numBatches, numObs, d) {
 
     stopifnot(k + numBatches * numObs <= length(x))
     # initialize an array filled with 0s
@@ -42,31 +42,34 @@ BatchMeans <- function(x, k, numBatches, numObs) {
         cat('mean =', means[i],'\n\n')
     }
 
-    finalMean <- round(mean(means), digits=2)
+    finalMean <- round(mean(means), digits=d)
     # variance is computed using N-1 at the bottom of the fraction
-    variance <- round(var(means), digits=2)
+    variance <- round(var(means), digits=d)
     n <- length(means)
     # TODO  check if it's right
     # confidence level 95%, qt quantile function, df degrees of freedom
-    a <- round(qt(0.975, df = n -1) * sqrt(variance/n), digits=2)
+    a <- round(qt(0.975, df = n - 1) * sqrt(variance/n), digits=d)
     # quantile(x, probs=0.25,...)
-    confidenceIntervalLeft <- round(finalMean - a, digits=2)
-    confidenceIntervalRight <- round(finalMean + a, digits=2)
+    confidenceIntervalLeft <- round(finalMean - a, digits=d)
+    confidenceIntervalRight <- round(finalMean + a, digits=d)
     # c() is a function that combines its arguments to form a vector
     return (c(finalMean, variance, confidenceIntervalLeft, confidenceIntervalRight))
 }
-
-q1LengthVector <- q1Length[,2]
-q2LengthVector <- q2Length[,2]
-q3LengthVector <- q3Length[,2]
-lifeTimeVector <- lifeTime[,2]
-
-results <- matrix(data=0, nr=4, nc=4)
-
-results[1,] <- BatchMeans(q1Length[,2], k=1000, numBatches=13, numObs=700)
-results[2,] <- BatchMeans(q2Length[,2], k=1000, numBatches=13, numObs=700)
-results[3,] <- BatchMeans(q3Length[,2], k=1000, numBatches=13, numObs=700)
-results[4,] <- BatchMeans(lifeTime[,2], k=1000, numBatches=9, numObs=300)
+length(q1Length[,2])
+length(q2Length[,2])
+length(q3Length[,2])
+length(lifeTime[,2])
+# results matrix
+r <- matrix(data=0, nr=4, nc=4)
+numDigits <- 4
+cat('BatchMeans q1Length: \n')
+r[1,] <- BatchMeans(q1Length[,2], k=1000, numBatches=13, numObs=700, d=numDigits)
+cat('BatchMeans q2Length: \n')
+r[2,] <- BatchMeans(q2Length[,2], k=1000, numBatches=11, numObs=600, d=numDigits)
+cat('BatchMeans q3Length: \n')
+r[3,] <- BatchMeans(q3Length[,2], k=100, numBatches=5, numObs=150, d=numDigits)
+cat('BatchMeans lifeTime: \n')
+r[4,] <- BatchMeans(lifeTime[,2], k=500, numBatches=9, numObs=300, d=numDigits)
 
 #avgSojournTime =
 #avgUsers =
