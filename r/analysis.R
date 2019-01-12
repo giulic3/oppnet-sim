@@ -62,6 +62,7 @@ length(lifeTime[,2])
 # results matrix
 r <- matrix(data=0, nr=4, nc=4)
 numDigits <- 4
+# TODO how to choose parameters
 cat('BatchMeans q1Length: \n')
 r[1,] <- BatchMeans(q1Length[,2], k=1000, numBatches=13, numObs=700, d=numDigits)
 cat('BatchMeans q2Length: \n')
