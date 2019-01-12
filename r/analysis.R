@@ -5,18 +5,18 @@
 # R CMD BATCH [options] my_script.R [outfile]
 # or with output to the terminal
 # Rscript analysis.R
+# to be executed inside the r directory
 
-# TODO
-# change to the R script directory
-setwd("/home/giulia/git/oppnet-sim/")
+setwd("../results/")
 # alternatively, set the absolute path when reading csv
 
+# TODO maybe it's better to pass to the r script the csv files as arguments
 # reads omnetpp vectors into data frames
-q1Length <- read.csv("./results/q1length.csv", header=TRUE, sep=',')
-q2Length <- read.csv("./results/q2length.csv", header=TRUE, sep=',')
-q3Length <- read.csv("./results/q3length.csv", header=TRUE, sep=',')
+q1Length <- read.csv("./General-10-#0_q1length.csv", header=TRUE, sep=',')
+q2Length <- read.csv("./General-10-#0_q2length.csv", header=TRUE, sep=',')
+q3Length <- read.csv("./General-10-#0_q3length.csv", header=TRUE, sep=',')
 # lifeTime of a job from source to sink
-lifeTime <- read.csv("./results/lifetime.csv", header=TRUE, sep=',')
+lifeTime <- read.csv("./General-10-#0_lifetime.csv", header=TRUE, sep=',')
 
 # x = vector containing the values
 # k = number of the first observations to ignore (to exclude warm up period)
@@ -55,22 +55,21 @@ BatchMeans <- function(x, k, numBatches, numObs, d) {
     # c() is a function that combines its arguments to form a vector
     return (c(finalMean, variance, confidenceIntervalLeft, confidenceIntervalRight))
 }
-length(q1Length[,2])
-length(q2Length[,2])
-length(q3Length[,2])
-length(lifeTime[,2])
+len1 <- length(q1Length[,2])
+len2 <- length(q2Length[,2])
+len3 <- length(q3Length[,2])
+len4 <- length(lifeTime[,2])
 # results matrix
 r <- matrix(data=0, nr=4, nc=4)
 numDigits <- 4
-# TODO how to choose parameters
 cat('BatchMeans q1Length: \n')
-r[1,] <- BatchMeans(q1Length[,2], k=1000, numBatches=13, numObs=700, d=numDigits)
+r[1,] <- BatchMeans(q1Length[,2], k=len1/10, numBatches=8, numObs=len1/10, d=numDigits)
 cat('BatchMeans q2Length: \n')
-r[2,] <- BatchMeans(q2Length[,2], k=1000, numBatches=11, numObs=600, d=numDigits)
+r[2,] <- BatchMeans(q2Length[,2], k=len2/10, numBatches=8, numObs=len2/10, d=numDigits)
 cat('BatchMeans q3Length: \n')
-r[3,] <- BatchMeans(q3Length[,2], k=100, numBatches=5, numObs=150, d=numDigits)
+r[3,] <- BatchMeans(q3Length[,2], k=len3/10, numBatches=8, numObs=len3/10, d=numDigits)
 cat('BatchMeans lifeTime: \n')
-r[4,] <- BatchMeans(lifeTime[,2], k=500, numBatches=9, numObs=300, d=numDigits)
+r[4,] <- BatchMeans(lifeTime[,2], k=len4/10, numBatches=8, numObs=len4/10, d=numDigits)
 
 #avgSojournTime =
 #avgUsers =
@@ -79,3 +78,17 @@ for (i in 1:4) {
     cat('results are:\nfinalMean = ', r[i,1],'\nvariance = ', r[i,2],
     '\nconfidenceInterval = (', r[i,3], ',', r[i,4], ')\n\n')
 }
+
+# TODO Improve charts style, see also ggplot2
+# Plotting the three queue lengths
+plot(q1Length[,1], q1Length[,2], type="b", main="Length of Q1 over time", xlab="simtime",
+    ylab="queue length", xlim=c(0, 500), ylim=c(0, 100))
+plot(q2Length[,1], q2Length[,2], type="b", main="Length of Q2 over time", xlab="simtime",
+    ylab="queue length", xlim=c(0, 100), ylim=c(0, 2))
+plot(q3Length[,1], q3Length[,2], type="b", main="Length of Q3 over time", xlab="simtime",
+    ylab="queue length", xlim=c(0, 2000), ylim=c(0, 2))
+# Plotting the jobs lifetime
+plot(lifeTime[,1], lifeTime[,2], type="b", main="Jobs lifetime", xlab="simtime",
+    ylab="lifetime", xlim=c(0, 1000), ylim=c(0, 1000))
+# Plotting the throughput
+# TODO
