@@ -1,14 +1,9 @@
 # first execute scavetool x *.sca -o oppnet-sim.csv or use omnet editor
 # click on .anf, right click on measure, export data, csv for spreadsheets
-
-# how to run a R script with output and input redirection
-# R CMD BATCH [options] my_script.R [outfile]
-# or with output to the terminal
+# execute with
 # Rscript analysis.R
-# to be executed inside the r directory
-
+# library("ggplot2")
 setwd("../results/")
-# alternatively, set the absolute path when reading csv
 
 # TODO maybe it's better to pass to the r script the csv files as arguments
 # reads omnetpp vectors into data frames
@@ -49,7 +44,6 @@ BatchMeans <- function(x, k, numBatches, numObs, d) {
     # TODO  check if it's right
     # confidence level 95%, qt quantile function, df degrees of freedom
     a <- round(qt(0.975, df = n - 1) * sqrt(variance/n), digits=d)
-    # quantile(x, probs=0.25,...)
     confidenceIntervalLeft <- round(finalMean - a, digits=d)
     confidenceIntervalRight <- round(finalMean + a, digits=d)
     # c() is a function that combines its arguments to form a vector
@@ -71,24 +65,25 @@ r[3,] <- BatchMeans(q3Length[,2], k=len3/10, numBatches=8, numObs=len3/10, d=num
 cat('BatchMeans lifeTime: \n')
 r[4,] <- BatchMeans(lifeTime[,2], k=len4/10, numBatches=8, numObs=len4/10, d=numDigits)
 
-#avgSojournTime =
-#avgUsers =
 
 for (i in 1:4) {
     cat('results are:\nfinalMean = ', r[i,1],'\nvariance = ', r[i,2],
     '\nconfidenceInterval = (', r[i,3], ',', r[i,4], ')\n\n')
 }
+# TODO the problem is that Little's Law assumes stable queues so check if the queues are stable
+meanThroughput <- (r[1,1]+r[2,1]+r[3,1])/r[4,1]
+cat('mean throughput = ', meanThroughput, '\n')
 
 # TODO Improve charts style, see also ggplot2
 # Plotting the three queue lengths
 plot(q1Length[,1], q1Length[,2], type="b", main="Length of Q1 over time", xlab="simtime",
-    ylab="queue length", xlim=c(0, 500), ylim=c(0, 100))
+    ylab="queue length", xlim=c(0, 500), ylim=c(0, 100), pch=20, cex=1)
 plot(q2Length[,1], q2Length[,2], type="b", main="Length of Q2 over time", xlab="simtime",
-    ylab="queue length", xlim=c(0, 100), ylim=c(0, 2))
+    ylab="queue length", xlim=c(0, 100), ylim=c(0, 2), pch=20, cex=1)
 plot(q3Length[,1], q3Length[,2], type="b", main="Length of Q3 over time", xlab="simtime",
-    ylab="queue length", xlim=c(0, 2000), ylim=c(0, 2))
+    ylab="queue length", xlim=c(0, 2000), ylim=c(0, 2), pch=20, cex=1)
 # Plotting the jobs lifetime
 plot(lifeTime[,1], lifeTime[,2], type="b", main="Jobs lifetime", xlab="simtime",
-    ylab="lifetime", xlim=c(0, 1000), ylim=c(0, 1000))
-# Plotting the throughput
+    ylab="lifetime", xlim=c(0, 1000), ylim=c(0, 1000), pch=20, cex=1)
+# Plotting the throughput, how?
 # TODO
