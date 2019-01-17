@@ -1,17 +1,10 @@
+#!/usr/bin/env Rscript
 # first execute scavetool x *.sca -o oppnet-sim.csv or use omnet editor
 # click on .anf, right click on measure, export data, csv for spreadsheets
 # execute with
 # Rscript analysis.R
 # library("ggplot2")
-setwd("../results/")
-
-# TODO maybe it's better to pass to the r script the csv files as arguments
-# reads omnetpp vectors into data frames
-q1Length <- read.csv("./General-10-#0_q1length.csv", header=TRUE, sep=',')
-q2Length <- read.csv("./General-10-#0_q2length.csv", header=TRUE, sep=',')
-q3Length <- read.csv("./General-10-#0_q3length.csv", header=TRUE, sep=',')
-# lifeTime of a job from source to sink
-lifeTime <- read.csv("./General-10-#0_lifetime.csv", header=TRUE, sep=',')
+# Rscript analysis.R ../results/General-10-#0_q1length.csv ../results/General-10-#0_q2length.csv ../results/General-10-#0_q3length.csv ../results/General-10-#0_lifetime.csv
 
 # x = vector containing the values
 # k = number of the first observations to ignore (to exclude warm up period)
@@ -49,6 +42,28 @@ BatchMeans <- function(x, k, numBatches, numObs, d) {
     # c() is a function that combines its arguments to form a vector
     return (c(finalMean, variance, confidenceIntervalLeft, confidenceIntervalRight))
 }
+
+# MAIN
+setwd("../results/")
+
+args = commandArgs(trailingOnly=TRUE)
+# test if there is at least one argument: if not, return an error
+if (length(args) == 0) {
+  stop("Four arguments must be supplied as .csv:
+  - q1length
+  - q2length
+  - q3length
+  - lifetime", call.=FALSE)
+}
+
+# TODO maybe it's better to pass to the r script the csv files as arguments
+# reads omnetpp vectors into data frames
+q1Length <- read.csv(args[1], header=TRUE, sep=',')
+q2Length <- read.csv(args[2], header=TRUE, sep=',')
+q3Length <- read.csv(args[3], header=TRUE, sep=',')
+# lifeTime of a job from source to sink
+lifeTime <- read.csv(args[4], header=TRUE, sep=',')
+
 len1 <- length(q1Length[,2])
 len2 <- length(q2Length[,2])
 len3 <- length(q3Length[,2])
