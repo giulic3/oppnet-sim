@@ -19,7 +19,6 @@
 #include "OppPassiveQueue.h"
 #include "Job.h"
 #include "IServer.h"
-// TODO can't simply subclass from PassiveQueue?
 
 namespace queueing {
 
@@ -59,7 +58,7 @@ void OppPassiveQueue::handleMessage(cMessage *msg) {
     Job *job = check_and_cast<Job *>(msg);
     job->setTimestamp();
 
-    // check for container capacity
+    // Check for container capacity (just for queues with limited capacity)
     if (capacity >= 0 && queue.getLength() >= capacity) {
         EV << "Queue full! Job dropped.\n";
         if (hasGUI())
@@ -68,30 +67,15 @@ void OppPassiveQueue::handleMessage(cMessage *msg) {
         delete msg;
         return;
     }
-    /*
-    int k = selectionStrategy->select();
-    if (k < 0) {
-        // enqueue if no idle server found
-        queue.insert(job);
-        emit(queueLengthSignal, length());
-        job->setQueueCount(job->getQueueCount() + 1);
-    }
-    else if (length() == 0) {
-        // send through without queuing
-        sendJob(job, k);
-    }
-    else
-        return;
-        // throw cRuntimeError("This should not happen. Queue is NOT empty and there is an IDLE server attached to us.");
-    */
-    // always enqueue, the passive queue has to wait for a server request
+
+    // Always enqueue, the packet in queue has to wait for a server request
     queue.insert(job);
     emit(queueLengthSignal, length());
     job->setQueueCount(job->getQueueCount() + 1);
 }
 
 void OppPassiveQueue::refreshDisplay() const {
-    // change the icon color
+    // Change the icon color
     getDisplayString().setTagArg("i", 1, queue.isEmpty() ? "" : "cyan");
 }
 

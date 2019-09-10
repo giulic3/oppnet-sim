@@ -28,7 +28,7 @@ OppServer::OppServer() {
     allocated = false; // true if the server was requested
 
     jobServiced = nullptr;
-    jobInterrupted = nullptr; // don't know if needed
+    jobInterrupted = nullptr; // don't know if needed TODO
 
     endServiceMsg = nullptr;
     startSwitchEvent = nullptr;
@@ -58,7 +58,7 @@ void OppServer::initialize() {
     selectionStrategy = SelectionStrategy::create(par("fetchingAlgorithm"), this, true);
 
     jobServiced = nullptr;
-    isServingQ1 = par("isServingQ1"); // true at the beginning
+    isServingQ1 = par("isServingQ1"); // True at the beginning
 
     serviceTime = par("serviceTime");
     switchOverTime = par("switchOverTime");
@@ -68,66 +68,50 @@ void OppServer::initialize() {
     endServiceMsg = new cMessage("end-service");
     startSwitchEvent = new cMessage("start-switch-event");
     endSwitchOverTimeEvent = new cMessage("end-switch-over-time-event");
-    // at the beginning S is serving Q1
-    scheduleAt(simTime()+Q1visitTime, startSwitchEvent);
+    scheduleAt(simTime()+Q1visitTime, startSwitchEvent); // ATB Q1 is served
 
 }
 
+// TODO: implementare meccanismo di ritrasmissione
 void OppServer::handleMessage(cMessage *msg) {
 
     EV << "Message name " << msg->getName() << endl;
 
-    // self-messages
+    // Self-messages
     if (msg == startSwitchEvent) {
          serverIsAvailable = false;
-         // if server is not doing anything (what if it had already requested a job?)
+         // If server is not doing anything (what if it had already requested a job?) TODO
          if (!jobServiced)
              scheduleAt(simTime()+switchOverTime, endSwitchOverTimeEvent);
-
+         // If jobServiced = true then the server will process the job and the next event
+         // will be a end service event
     }
     else if (msg == endSwitchOverTimeEvent) {
-        // invert isServingQ1 (0 to 1 and 1 to 0)
+        // Invert isServingQ1 (0 to 1 and 1 to 0)
         serverIsAvailable = true;
         isServingQ1 = !isServingQ1;
 
+        // Schedule next switch event
         if (isServingQ1)
            scheduleAt(simTime()+Q1visitTime, startSwitchEvent);
        else
            scheduleAt(simTime()+Q2visitTime, startSwitchEvent);
 
-        // check if serving Q1 or Q2, then request a job
-        cGate *inGate = nullptr;
-
-        if (isServingQ1)
-            inGate = selectionStrategy->selectableGate(0);
-        else {
-            EV << "endSwitchOverTimeEvent: in else" << endl;
-            inGate = selectionStrategy->selectableGate(1);
-        }
-
-        try {
-            // if (!jobServiced)
-            EV << "requesting a job, gate, getOwnerModule: " << inGate << " " << inGate->getOwnerModule() << endl;
-            // inGate->getIndex() refers to the indexing of the PassiveQueue, not of the Server!
-                check_and_cast<IPassiveQueue *>(inGate->getOwnerModule())->request(inGate->getIndex());
-        }
-        catch(int e) {
-            EV << "requesting job from an empty queue";
-        }
+        requestJob();
     }
     else if (msg == endServiceMsg) {
 
         simtime_t d = simTime() - endServiceMsg->getSendingTime();
         jobServiced->setTotalServiceTime(jobServiced->getTotalServiceTime() + d);
 
-        EV << "deciding where to send the job, isServingQ1 is " << isServingQ1 << "\n";
+        EV << "Deciding where to send the job, isServingQ1 is " << isServingQ1 << "\n";
         if (isServingQ1) {
-            // send the job out to Q2
+            // Send the job out to Q2
             EV << "Sending the job out to Q2" << endl;
             send(jobServiced, "out", 0);
         }
         else {
-            // send the job out to Q3
+            // Send the job out to Q3
             EV << "Sending the job out to Q3" << endl;
             send(jobServiced, "out", 1);
         }
@@ -137,29 +121,14 @@ void OppServer::handleMessage(cMessage *msg) {
         emit(busySignal, false);
 
         if (serverIsAvailable) {
-            // check if serving Q1 or Q2, then request a job
-            cGate *inGate = nullptr;
-
-            if (isServingQ1)
-                inGate = selectionStrategy->selectableGate(0);
-            else {
-                EV << "endServiceMsg: in else" << endl;
-                inGate = selectionStrategy->selectableGate(1);
-            }
-            try {
-                EV << "requesting a job, gate, getOwnerModule: " << inGate << " " << inGate->getOwnerModule() << endl;
-                check_and_cast<IPassiveQueue *>(inGate->getOwnerModule())->request(inGate->getIndex());
-            }
-            catch(int e) {
-                EV << "requesting job from an empty queue";
-            }
+            requestJob();
         }
         else
-            // if the server is not available means it is ready to switch
+            // If the server is not available then it means it is ready to switch
             scheduleAt(simTime()+switchOverTime, endSwitchOverTimeEvent);
 
     }
-    // a new job arrives
+    // A new job arrives
     else {
         EV << "A new job has arrived. Server is available? " << serverIsAvailable << "\n";
         if (serverIsAvailable) {
@@ -168,15 +137,15 @@ void OppServer::handleMessage(cMessage *msg) {
             if (jobServiced)
             {
                 // TODO use here jobInterrupted...
-                throw cRuntimeError("a new job arrived while already servicing one");
+                throw cRuntimeError("A new job arrived while already servicing one");
             }
-            // the new job is serviced
+            // The new job is serviced
             jobServiced = check_and_cast<Job *>(msg);
             scheduleAt(simTime()+serviceTime, endServiceMsg);
             emit(busySignal, true);
         }
         else {
-            // send the job back? TODO
+            // Send the job back? TODO
         }
     }
 }
@@ -186,13 +155,31 @@ void OppServer::refreshDisplay() const
     getDisplayString().setTagArg("i2", 0, jobServiced ? "status/execute" : "");
 }
 
-void OppServer::finish()
-{
+void OppServer::finish() {}
+
+// Function that requests a job from a passive queue (Q1 or Q2)
+void OppServer::requestJob(){
+    // Check if serving Q1 or Q2, then request a job
+    cGate *inGate = nullptr;
+
+    if (isServingQ1)
+        inGate = selectionStrategy->selectableGate(0);
+    else {
+        EV << "endServiceMsg: in else" << endl;
+        inGate = selectionStrategy->selectableGate(1);
+    }
+    try {
+        EV << "Requesting a job, gate, getOwnerModule: " << inGate << " " << inGate->getOwnerModule() << endl;
+        check_and_cast<IPassiveQueue *>(inGate->getOwnerModule())->request(inGate->getIndex());
+    }
+    catch(int e) {
+        EV << "Requesting job from an empty queue";
+    }
 }
 
 bool OppServer::isIdle()
 {
-    return !allocated;  // we are idle if nobody has allocated us for processing
+    return !allocated;  // Idle if nobody allocated us for processing
 }
 
 void OppServer::allocate()

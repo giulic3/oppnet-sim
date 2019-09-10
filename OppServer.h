@@ -34,8 +34,7 @@ private:
     SelectionStrategy *selectionStrategy;
 
     simtime_t serviceTime;
-    // time to switch from one position/queue to the other
-    simtime_t switchOverTime;
+    simtime_t switchOverTime; // Time to switch from one position/queue to the other
     simtime_t Q1visitTime;
     simtime_t Q2visitTime;
 
@@ -56,6 +55,7 @@ protected:
     virtual void handleMessage(cMessage *msg) override;
     virtual void refreshDisplay() const override;
     virtual void finish() override;
+    void requestJob();
 
 
 public:

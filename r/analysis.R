@@ -10,7 +10,7 @@
 # k = number of the first observations to ignore (to exclude warm up period)
 # numBatches = number of batches
 # numObs = number of observations per batch
-# dprecision = number of digits after comma
+# d = precision, number of digits after comma
 BatchMeans <- function(x, k, numBatches, numObs, d) {
 
     stopifnot(k + numBatches * numObs <= length(x))
