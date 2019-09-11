@@ -39,7 +39,9 @@ private:
     simtime_t Q2visitTime;
 
     Job *jobServiced;
-    Job *jobInterrupted;
+    Job *jobInterruptedQ1;
+    Job *jobInterruptedQ2;
+
     cMessage *endServiceMsg;
     cMessage *startSwitchEvent;
     cMessage *endSwitchOverTimeEvent;

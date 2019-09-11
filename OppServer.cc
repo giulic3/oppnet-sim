@@ -28,7 +28,8 @@ OppServer::OppServer() {
     allocated = false; // true if the server was requested
 
     jobServiced = nullptr;
-    jobInterrupted = nullptr; // don't know if needed TODO
+    jobInterruptedQ1 = nullptr; // don't know if needed TODO
+    jobInterruptedQ2 = nullptr;
 
     endServiceMsg = nullptr;
     startSwitchEvent = nullptr;
@@ -41,7 +42,8 @@ OppServer::~OppServer() {
     delete selectionStrategy;
 
     delete jobServiced;
-    delete jobInterrupted;
+    delete jobInterruptedQ1;
+    delete jobInterruptedQ2;
 
     cancelAndDelete(startSwitchEvent);
     cancelAndDelete(endSwitchOverTimeEvent);
@@ -57,7 +59,6 @@ void OppServer::initialize() {
     // really not needed
     selectionStrategy = SelectionStrategy::create(par("fetchingAlgorithm"), this, true);
 
-    jobServiced = nullptr;
     isServingQ1 = par("isServingQ1"); // True at the beginning
 
     serviceTime = par("serviceTime");
@@ -80,24 +81,44 @@ void OppServer::handleMessage(cMessage *msg) {
     // Self-messages
     if (msg == startSwitchEvent) {
          serverIsAvailable = false;
-         // If server is not doing anything (what if it had already requested a job?) TODO
-         if (!jobServiced)
-             scheduleAt(simTime()+switchOverTime, endSwitchOverTimeEvent);
+         // If server is not doing anything (what if it had already requested a job?)
+         if (jobServiced) {
+             if (isServingQ1) jobInterruptedQ1 = jobServiced;
+             else jobInterruptedQ2 = jobServiced;
+
+             jobServiced = nullptr;
+
+         }
+         // Schedule next switch in any case
+         scheduleAt(simTime()+switchOverTime, endSwitchOverTimeEvent);
          // If jobServiced = true then the server will process the job and the next event
          // will be a end service event
     }
     else if (msg == endSwitchOverTimeEvent) {
-        // Invert isServingQ1 (0 to 1 and 1 to 0)
+
         serverIsAvailable = true;
+        // Invert isServingQ1 (0 to 1 and 1 to 0)
         isServingQ1 = !isServingQ1;
 
-        // Schedule next switch event
-        if (isServingQ1)
-           scheduleAt(simTime()+Q1visitTime, startSwitchEvent);
-       else
-           scheduleAt(simTime()+Q2visitTime, startSwitchEvent);
+        if (isServingQ1 && !jobInterruptedQ1) {
+            jobServiced = check_and_cast<Job *>(jobInterruptedQ1); // FIX:THIS IS NULL HERE
+            scheduleAt(simTime()+serviceTime, endServiceMsg);
+            emit(busySignal, true);
+        }
+        else if (!isServingQ1 && !jobInterruptedQ2) {
+            jobServiced = check_and_cast<Job *>(jobInterruptedQ2);
+            scheduleAt(simTime()+serviceTime, endServiceMsg);
+            emit(busySignal, true);
+        }
+        else {
+            // Schedule next switch event
+            if (isServingQ1)
+               scheduleAt(simTime()+Q1visitTime, startSwitchEvent);
+            else
+               scheduleAt(simTime()+Q2visitTime, startSwitchEvent);
 
-        requestJob();
+            requestJob();
+        }
     }
     else if (msg == endServiceMsg) {
 
@@ -109,11 +130,15 @@ void OppServer::handleMessage(cMessage *msg) {
             // Send the job out to Q2
             EV << "Sending the job out to Q2" << endl;
             send(jobServiced, "out", 0);
+            jobInterruptedQ1 = nullptr;
+
         }
         else {
             // Send the job out to Q3
             EV << "Sending the job out to Q3" << endl;
             send(jobServiced, "out", 1);
+            jobInterruptedQ2 = nullptr;
+
         }
 
         jobServiced = nullptr;
@@ -127,6 +152,7 @@ void OppServer::handleMessage(cMessage *msg) {
             // If the server is not available then it means it is ready to switch
             scheduleAt(simTime()+switchOverTime, endSwitchOverTimeEvent);
 
+
     }
     // A new job arrives
     else {
@@ -136,7 +162,6 @@ void OppServer::handleMessage(cMessage *msg) {
                 error("job arrived, but the sender did not call allocate() previously");
             if (jobServiced)
             {
-                // TODO use here jobInterrupted...
                 throw cRuntimeError("A new job arrived while already servicing one");
             }
             // The new job is serviced
