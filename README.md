@@ -3,24 +3,48 @@ OMNeT++ simulation of a tandem queueing model for opportunistic networks
 
 ## Getting Started
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+Follow this README.md to have a copy of the project up and running on your local machine for development and testing purposes.
 
 ### Prerequisites
 
 * [OMNeT++](https://omnetpp.org/) - Discrete Event Simulator
-* [R] (https://www.r-project.org/) - Language and Environment for Statistical Computing
-* ...
+* [OMNeT++ - queueinglib](https://github.com/shigeya/omnetpp/tree/master/samples/queueinglib) - OMNeT++ Library for implementing queueing networks
+* [R](https://www.r-project.org/) - Language and Environment for Statistical Computing
+
 
 ### Installing
 
-TODO Scrivere come fare il clone e installare questo codice
+To get and access the code:
+
 
 ```
-Give the example
+git clone https://github.com/giulic3/oppnet-sim.git
+cd oppnet-sim/
+
 ```
 
 ## Running the tests
 
-TODO Posso scrivere come eseguire simulazione, aprire proj, etc. e rimandare al report per i dettagli
 
-Explain how to run the automated tests for this system
+See runs that have been configured (cmdline env):
+```
+./oppnet-sim -u Cmdenv -x General -g
+```
+To run the simulation, from the executable directory:
+
+```
+./oppnet-sim -m -n <path-to-NED-files> -l <path-to-queueinglib-shared-library> <ini-file> -u Cmdenv -c General
+
+```
+
+Useful flags:
+```
+-m                  # merge standard error into standard output, i.e. report errors on
+                      the standard output instead of the default standard error.
+-n                  # when present, overrides the NEDPATH environment variable.
+-l                  # load shared libraries
+-u Cmdenv (Qtenv)   # select user interface/runtime environment
+-c <config-name>    # select config
+-r <run>            # select run
+
+```

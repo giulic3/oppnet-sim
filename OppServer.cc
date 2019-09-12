@@ -72,7 +72,6 @@ void OppServer::initialize() {
 
 }
 
-// TODO: implementare meccanismo di ritrasmissione
 void OppServer::handleMessage(cMessage *msg) {
 
     EV << "Message name " << msg->getName() << endl;
@@ -80,7 +79,7 @@ void OppServer::handleMessage(cMessage *msg) {
     // Self-messages
     if (msg == startSwitchEvent) {
          serverIsAvailable = false;
-         // If server is not doing anything (what if it had already requested a job?) TODO
+         // If server is not doing anything
          if (!jobServiced)
              scheduleAt(simTime()+switchOverTime, endSwitchOverTimeEvent);
          // If jobServiced = true then the server will process the job and the next event
@@ -130,23 +129,16 @@ void OppServer::handleMessage(cMessage *msg) {
     }
     // A new job arrives
     else {
-        EV << "A new job has arrived. Server is available? " << serverIsAvailable << "\n";
-        if (serverIsAvailable) {
+        // Can happen only upon server request, this means it was available
             if (!allocated)
-                error("job arrived, but the sender did not call allocate() previously");
+                error("Job arrived, but the sender did not call allocate() previously");
             if (jobServiced)
-            {
-                // TODO use here jobInterrupted...
                 throw cRuntimeError("A new job arrived while already servicing one");
-            }
+
             // The new job is serviced
             jobServiced = check_and_cast<Job *>(msg);
             scheduleAt(simTime()+serviceTime, endServiceMsg);
             emit(busySignal, true);
-        }
-        else {
-            // Send the job back? TODO
-        }
     }
 }
 
