@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# export queues length and jobs lifetime
+# Export queues length and jobs lifetime
 find -iname '*.vec' | while read name; do
     out=$(echo $name | sed 's/\.vec//')
     echo name $name
