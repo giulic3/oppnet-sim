@@ -1,7 +1,5 @@
 #!/usr/bin/env Rscript
 
-library("ggplot2")
-
 # x = vector containing the values
 # k = number of the first observations to ignore (to exclude warm up period)
 # numBatches = number of batches
