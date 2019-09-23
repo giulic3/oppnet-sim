@@ -23,7 +23,9 @@ cd oppnet-sim/
 
 ```
 
-## Running the tests
+## Running the code
+
+### Running the simulation
 
 
 See runs that have been configured (cmdline env):
@@ -48,3 +50,17 @@ Useful flags:
 -r <run>            # select run
 
 ```
+
+### Extract the statistics and perform analysis in R
+
+The bash script export_stats
+```
+# first execute scavetool x *.sca -o oppnet-sim.csv or use omnet editor
+# click on .anf, right click on measure, export data, csv for spreadsheets
+```
+
+TODO finish adding how to extract stats (cmd line or from editor) and run R script
+
+# execute with
+# Rscript analysis.R <q1length.csv, q2length, q3length, lifetime.csv>
+# Rscript analysis.R ../results/General-10-#0_q1length.csv ../results/General-10-#0_q2length.csv ../results/General-10-#0_q3length.csv ../results/General-10-#0_lifetime.csv

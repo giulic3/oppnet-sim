@@ -1,5 +1,4 @@
 #!/usr/bin/env Rscript
-# Rscript printPlots.R ../results/General-11\,2.5-#1_q1length.csv ../results/General-11\,2.5-#1_q2length.csv ../results/General-11\,2.5-#1_q3length.csv ../results/General-11\,2.5-#1_lifetime.csv
 library(ggplot2)
 
 #setwd("../results/")
@@ -28,23 +27,15 @@ q3Length_df <- data.frame("simtime" = q3Length[,1], "length" = q3Length[,2], str
 lifeTime_df <- data.frame("simtime" = lifeTime[,1], "lifetime" = lifeTime[,2], stringsAsFactors = FALSE)
 
 # Plots
-ggplot(q1Length_df, aes(x=simtime,y=length)) + geom_point() + geom_line() + coord_cartesian(xlim = c(0, 1000), ylim = c(0, 10))
+ggplot(q1Length_df, aes(x=simtime,y=length)) + geom_line(size=0.4, color="black") + coord_cartesian(xlim = c(0, 500), ylim = c(0, 10))
 ggsave("q1Length_plot.pdf")
 
-ggplot(q2Length_df, aes(x=simtime,y=length)) + geom_point() + geom_line() + coord_cartesian(xlim = c(0, 1000), ylim = c(0, 10))
+ggplot(q2Length_df, aes(x=simtime,y=length)) + geom_line(size=0.4) + coord_cartesian(xlim = c(0, 10000), ylim = c(0, 10))
 ggsave("q2Length_plot.pdf")
 
-ggplot(q3Length_df, aes(x=simtime,y=length)) + geom_point() + geom_line() + coord_cartesian(xlim = c(0, 1000), ylim = c(0, 10))
+ggplot(q3Length_df, aes(x=simtime,y=length)) + geom_line(size=0.4) + coord_cartesian(xlim = c(0, 500), ylim = c(0, 10))
 ggsave("q3Length_plot.pdf")
 
-ggplot(lifeTime_df, aes(x=simtime,y=lifetime)) + geom_point() + geom_line() + coord_cartesian(xlim = c(0, 1000), ylim = c(0, 60))
+ggplot(lifeTime_df, aes(x=simtime,y=lifetime)) + geom_line(size=0.4) + coord_cartesian(xlim = c(0, 10000), ylim = c(0, 60))
 ggsave("lifeTime_plot.pdf")
-
-
-
-# TODO I would like to plot the mean directly on the graphs for the queuelengths
-
-# Plotting the throughput, how?
-# TODO
-
 
