@@ -23,12 +23,11 @@ namespace queueing {
 Define_Module(OppServer);
 
 OppServer::OppServer() {
-    // TODO Auto-generated constructor stub
+
     selectionStrategy = nullptr;
     allocated = false; // true if the server was requested
 
     jobServiced = nullptr;
-    jobInterrupted = nullptr; // don't know if needed TODO
 
     endServiceMsg = nullptr;
     startSwitchEvent = nullptr;
@@ -37,11 +36,9 @@ OppServer::OppServer() {
 }
 
 OppServer::~OppServer() {
-    // TODO Auto-generated destructor stub
-    delete selectionStrategy;
 
+    delete selectionStrategy;
     delete jobServiced;
-    delete jobInterrupted;
 
     cancelAndDelete(startSwitchEvent);
     cancelAndDelete(endSwitchOverTimeEvent);
