@@ -1,6 +1,18 @@
 #!/usr/bin/env Rscript
 library(ggplot2)
 
+# Function that given a vector of values and timesteps, return dataframe of cumulative means
+# 'array' must have two dimensions
+CumulativeMeans <- function(array) {
+  count <- length(array[,1])
+  means <- array(data = 0, dim = count)
+  for (i in 1:count) {
+    means[i] <- mean(array[1,2]:array[i,2], na.rm=TRUE)
+  }
+  
+  return(means)
+}
+
 #setwd("../results/")
 
 args = commandArgs(trailingOnly=TRUE)
@@ -15,7 +27,6 @@ if (length(args) == 0) {
 
 # Reads omnetpp vectors into data frames
 q1Length <- read.csv(args[1], sep=',')
-
 q2Length <- read.csv(args[2], sep=',')
 q3Length <- read.csv(args[3], sep=',')
 lifeTime <- read.csv(args[4], sep=',') # lifeTime of a job from source to sink
@@ -26,16 +37,35 @@ q2Length_df <- data.frame("simtime" = q2Length[,1], "length" = q2Length[,2], str
 q3Length_df <- data.frame("simtime" = q3Length[,1], "length" = q3Length[,2], stringsAsFactors = FALSE)
 lifeTime_df <- data.frame("simtime" = lifeTime[,1], "lifetime" = lifeTime[,2], stringsAsFactors = FALSE)
 
-# Plots
-ggplot(q1Length_df, aes(x=simtime,y=length)) + geom_line(size=0.4, color="black") + coord_cartesian(xlim = c(0, 500), ylim = c(0, 10))
+cat("Compute cumulative means...\n")
+start.time <- Sys.time()
+q1Length_mean_df <- data.frame("simtime" = q1Length[,1], "avglength" = CumulativeMeans(q1Length), stringsAsFactors = FALSE)
+q2Length_mean_df <- data.frame("simtime" = q2Length[,1], "avglength" = CumulativeMeans(q2Length), stringsAsFactors = FALSE)
+q3Length_mean_df <- data.frame("simtime" = q3Length[,1], "avglength" = CumulativeMeans(q3Length), stringsAsFactors = FALSE)
+lifeTime_mean_df <- data.frame("simtime" = lifeTime[,1], "avglifetime" = CumulativeMeans(lifeTime), stringsAsFactors = FALSE)
+end.time <- Sys.time()
+time.taken <- end.time - start.time
+time.taken
+
+cat("Save data plots...\n")
+ggplot(q1Length_df, aes(x=simtime,y=length)) + geom_line(size=0.4, color="black") + coord_cartesian(xlim = c(0, 5000), ylim = c(0, 10))
 ggsave("q1Length_plot.pdf")
-
-ggplot(q2Length_df, aes(x=simtime,y=length)) + geom_line(size=0.4) + coord_cartesian(xlim = c(0, 10000), ylim = c(0, 10))
+ggplot(q2Length_df, aes(x=simtime,y=length)) + geom_line(size=0.4) + coord_cartesian(xlim = c(0, 5000), ylim = c(0, 10))
 ggsave("q2Length_plot.pdf")
-
-ggplot(q3Length_df, aes(x=simtime,y=length)) + geom_line(size=0.4) + coord_cartesian(xlim = c(0, 500), ylim = c(0, 10))
+ggplot(q3Length_df, aes(x=simtime,y=length)) + geom_line(size=0.4) + coord_cartesian(xlim = c(0, 5000), ylim = c(0, 10))
 ggsave("q3Length_plot.pdf")
-
-ggplot(lifeTime_df, aes(x=simtime,y=lifetime)) + geom_line(size=0.4) + coord_cartesian(xlim = c(0, 10000), ylim = c(0, 60))
+ggplot(lifeTime_df, aes(x=simtime,y=lifetime)) + geom_line(size=0.4) + coord_cartesian(xlim = c(0, 5000), ylim = c(0, 60))
 ggsave("lifeTime_plot.pdf")
+
+cat("Save mean plots...\n")
+ggplot(q1Length_mean_df, aes(x=simtime,y=avglength)) + geom_line(size=0.4) + coord_cartesian(xlim = c(0, 10000), ylim = c(0, 10))
+ggsave("q1Length_mean_plot.pdf")
+ggplot(q2Length_mean_df, aes(x=simtime,y=avglength)) + geom_line(size=0.4) + coord_cartesian(xlim = c(0, 10000), ylim = c(0, 10))
+ggsave("q2Length_mean_plot.pdf")
+ggplot(q3Length_mean_df, aes(x=simtime,y=avglength)) + geom_line(size=0.4) + coord_cartesian(xlim = c(0, 10000), ylim = c(0, 10))
+ggsave("q3Length_mean_plot.pdf")
+ggplot(lifeTime_mean_df, aes(x=simtime,y=avglifetime)) + geom_line(size=0.4) + coord_cartesian(xlim = c(0, 10000), ylim = c(0, 10))
+ggsave("lifeTime_mean_plot.pdf")
+
+cat("Save variance plots...\n")
 
