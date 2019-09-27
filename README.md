@@ -60,7 +60,3 @@ The bash script export_stats
 ```
 
 TODO finish adding how to extract stats (cmd line or from editor) and run R script
-
-# execute with
-# Rscript analysis.R <q1length.csv, q2length, q3length, lifetime.csv>
-# Rscript analysis.R ../results/General-10-#0_q1length.csv ../results/General-10-#0_q2length.csv ../results/General-10-#0_q3length.csv ../results/General-10-#0_lifetime.csv
