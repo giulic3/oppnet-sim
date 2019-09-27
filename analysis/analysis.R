@@ -8,7 +8,7 @@ setwd("../results/")
 seeds <- c(11, 17, 53)
 # 3 params for interArrivalTime
 iterationVars <- c(2.5, 5, 10)
-runs <- 3 # this changes
+runs <- 1 # this changes
 
 n_rows <- length(seeds)*length(iterationVars)*runs
 n_columns <- 18
@@ -19,8 +19,10 @@ header <- c("config name", "q1 length: mean", "q1 length: var", "q1 length: int 
             "q2 length: mean", "q2 length: var", "q2 length: int l", "q2 length: int r",
             "q3 length: mean", "q3 length: var", "q3 length: int l", "q3 length: int r",
             "lifetime: mean", "lifetime: var ", "lifetime: int l", "lifetime: int r",
-            "mean throughput")
+            "throughput: mean")
+
 results <- rbind(header)
+#  stimare il Throughput ( media)  utilizzando le osservazioni: numero di utenti che hanno sperimentato servizio / tempo di osservazione;
 
 for (s in 1:length(seeds)) {
   for (it in 1:length(iterationVars)) {
@@ -48,18 +50,18 @@ for (s in 1:length(seeds)) {
         # cat('BatchMeans lifeTime: \n')
         r[4,] <- BatchMeans(lifeTime[,2], k=len4/10, numBatches=8, numObs=len4/10, d=numDigits)
         
-        meanThroughput <- round((r[1,1]+r[2,1]+r[3,1])/r[4,1], digits = 2)
-
+        meanThroughput <- len4 / (lifeTime[len4,2] - lifeTime[1,2])
+          
         results_column <- c(paste("PreliminarySimulation-",seeds[s], ",",iterationVars[it],"-#",j, sep=""))
         for (i in 1:4)
           results_column <- c(results_column, r[i,1], r[i,2], r[i,3], r[i,4])
         results_column <- c(results_column, meanThroughput)
         results <- rbind(results, results_column)
-
     }
   }
 }
 print(results)
+# Visualizationw with .csv is not to be trusted
 write.table(results, file="../analysis/results.csv", append=FALSE, sep="\t", col.names=FALSE, row.names=FALSE)
 cat("\n", "### done ###", "\n")
 
