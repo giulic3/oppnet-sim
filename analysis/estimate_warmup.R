@@ -1,20 +1,6 @@
 #!/usr/bin/env Rscript
 library(ggplot2)
-
-# Function that given a vector of values and timesteps, return array of cumulative means and variances
-# 'array' must have two dimensions
-CumulativeMeasures <- function(array) {
-  count <- length(array[,1])
-  means <- array(data = 0, dim = count)
-  variances <- array(data = 0, dim = count)
-  for (i in 1:count) {
-    means[i] <- mean(array[1,2]:array[i,2], na.rm=TRUE)
-    variances[i] <- var(array[1,2]:array[i,2], na.rm=TRUE) 
-  }
-  
-  return(c(means, variances))
-}
-
+source("compute.R")
 #setwd("../results/")
 
 args = commandArgs(trailingOnly=TRUE)
@@ -26,7 +12,7 @@ if (length(args) == 0) {
   - q3length
   - lifetime", call.=FALSE)
 }
-
+# TODO Refactor everything using loops
 # Reads omnetpp vectors into data frames
 q1Length <- read.csv(args[1], sep=',')
 q2Length <- read.csv(args[2], sep=',')
@@ -42,19 +28,30 @@ lifeTime_df <- data.frame("simtime" = lifeTime[,1], "lifetime" = lifeTime[,2], s
 cat("Compute cumulative means...\n")
 start.time <- Sys.time()
 
-q1Length_mean_df <- data.frame("simtime" = q1Length[,1], "avglength" = CumulativeMeasures(q1Length), stringsAsFactors = FALSE)
-q2Length_mean_df <- data.frame("simtime" = q2Length[,1], "avglength" = CumulativeMeasures(q2Length), stringsAsFactors = FALSE)
-q3Length_mean_df <- data.frame("simtime" = q3Length[,1], "avglength" = CumulativeMeasures(q3Length), stringsAsFactors = FALSE)
-lifeTime_mean_df <- data.frame("simtime" = lifeTime[,1], "avglifetime" = CumulativeMeasures(lifeTime), stringsAsFactors = FALSE)
+q1Length_measures <- CumulativeMeasures(q1Length)
+q2Length_measures <- CumulativeMeasures(q2Length)
+q3Length_measures <- CumulativeMeasures(q3Length)
+lifeTime_measures <- CumulativeMeasures(lifeTime)
 
-q1Length_var_df <- data.frame("simtime" = q1Length[,1], "varlength" = CumulativeMeasures(q1Length), stringsAsFactors = FALSE)
-q2Length_var_df <- data.frame("simtime" = q2Length[,1], "varlength" = CumulativeMeasures(q2Length), stringsAsFactors = FALSE)
-q3Length_var_df <- data.frame("simtime" = q3Length[,1], "varlength" = CumulativeMeasures(q3Length), stringsAsFactors = FALSE)
-lifeTime_var_df <- data.frame("simtime" = lifeTime[,1], "varlifetime" = CumulativeMeasures(lifeTime), stringsAsFactors = FALSE)
+q1Length_mean_df <- data.frame("simtime" = q1Length[,1], "avglength" = q1Length_measures[,1], stringsAsFactors = FALSE)
+q2Length_mean_df <- data.frame("simtime" = q2Length[,1], "avglength" = q2Length_measures[,1], stringsAsFactors = FALSE)
+q3Length_mean_df <- data.frame("simtime" = q3Length[,1], "avglength" = q3Length_measures[,1], stringsAsFactors = FALSE)
+lifeTime_mean_df <- data.frame("simtime" = lifeTime[,1], "avglifetime" = lifeTime_measures[,1], stringsAsFactors = FALSE)
+
+q1Length_var_df <- data.frame("simtime" = q1Length[,1], "varlength" = q1Length_measures[,2], stringsAsFactors = FALSE)
+q2Length_var_df <- data.frame("simtime" = q2Length[,1], "varlength" = q2Length_measures[,2], stringsAsFactors = FALSE)
+q3Length_var_df <- data.frame("simtime" = q3Length[,1], "varlength" = q3Length_measures[,2], stringsAsFactors = FALSE)
+lifeTime_var_df <- data.frame("simtime" = lifeTime[,1], "varlifetime" = lifeTime_measures[,2], stringsAsFactors = FALSE)
+
+
+# Compute throughput
+throughput <- ThroughputOverTime(lifeTime)
+throughput_df <- data.frame("simtime" = lifeTime[,1], "avgthroughput" = throughput, stringsAsFactors = FALSE)
 
 end.time <- Sys.time()
 time.taken <- end.time - start.time
 time.taken
+
 
 x_axis_limit = 3000
 y_axis_limit = 10 
@@ -80,11 +77,15 @@ ggplot(lifeTime_mean_df, aes(x=simtime,y=avglifetime)) + geom_line(size=0.4) + c
 ggsave("lifeTime_mean_plot.pdf")
 
 cat("Save variance plots...\n")
-ggplot(q1Length_var_df, aes(x=simtime,y=varlength)) + geom_line(size=0.4) + coord_cartesian(xlim = c(0, x_axis_limit), ylim = c(0, 10)) + ggtitle("Variance on length of Q1")
+ggplot(q1Length_var_df, aes(x=simtime,y=varlength)) + geom_line(size=0.4) + coord_cartesian(xlim = c(0, x_axis_limit), ylim = c(0, 3)) + ggtitle("Variance on length of Q1")
 ggsave("q1Length_var_plot.pdf") 
-ggplot(q2Length_var_df, aes(x=simtime,y=varlength)) + geom_line(size=0.4) + coord_cartesian(xlim = c(0, x_axis_limit), ylim = c(0, 10)) + ggtitle("Variance on length of Q2")
+ggplot(q2Length_var_df, aes(x=simtime,y=varlength)) + geom_line(size=0.4) + coord_cartesian(xlim = c(0, x_axis_limit), ylim = c(0, 3)) + ggtitle("Variance on length of Q2")
 ggsave("q2Length_var_plot.pdf")
-ggplot(q3Length_var_df, aes(x=simtime,y=varlength)) + geom_line(size=0.4) + coord_cartesian(xlim = c(0, x_axis_limit), ylim = c(0, 10)) + ggtitle("Variance on length of Q3")
+ggplot(q3Length_var_df, aes(x=simtime,y=varlength)) + geom_line(size=0.4) + coord_cartesian(xlim = c(0, x_axis_limit), ylim = c(0, 3)) + ggtitle("Variance on length of Q3")
 ggsave("q3Length_var_plot.pdf")
-ggplot(lifeTime_var_df, aes(x=simtime,y=varlifetime)) + geom_line(size=0.4) + coord_cartesian(xlim = c(0, x_axis_limit), ylim = c(0, 10)) + ggtitle("Variance on job lifetime")
+ggplot(lifeTime_var_df, aes(x=simtime,y=varlifetime)) + geom_line(size=0.4) + coord_cartesian(xlim = c(0, x_axis_limit), ylim = c(0, 3)) + ggtitle("Variance on job lifetime")
 ggsave("lifeTime_var_plot.pdf")
+
+cat("Save throughput plot...\n")
+ggplot(throughput_df, aes(x=simtime, y=avgthroughput)) + geom_line(size=0.4) + coord_cartesian(xlim = c(10, 3000), ylim = c(0, 1)) + ggtitle("Network throughput")
+ggsave("throughput_mean_plot.pdf") 

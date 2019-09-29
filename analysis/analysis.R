@@ -1,6 +1,5 @@
 #!/usr/bin/env Rscript
-
-source("batch_means.R")
+source("compute.R")
 
 # MAIN
 setwd("../results/")
@@ -22,7 +21,6 @@ header <- c("config name", "q1 length: mean", "q1 length: var", "q1 length: int 
             "throughput: mean")
 
 results <- rbind(header)
-#  stimare il Throughput ( media)  utilizzando le osservazioni: numero di utenti che hanno sperimentato servizio / tempo di osservazione;
 
 for (s in 1:length(seeds)) {
   for (it in 1:length(iterationVars)) {
@@ -37,20 +35,22 @@ for (s in 1:length(seeds)) {
         len2 <- length(q2Length[,2])
         len3 <- length(q3Length[,2])
         len4 <- length(lifeTime[,2])
+
         r <- matrix(data=0, nr=4, nc=4) # Results matrix
         
         numDigits <- 2
         # cat('BatchMeans q1Length: \n')
         r[1,] <- BatchMeans(q1Length[,2], k=len1/10, numBatches=8, numObs=len1/10, d=numDigits)
-        cat('BatchMeans q2Length: \n')
+        #cat('BatchMeans q2Length: \n')
         r[2,] <- BatchMeans(q2Length[,2], k=len2/10, numBatches=8, numObs=len2/10, d=numDigits)
-        print(r[2,])
         # cat('BatchMeans q3Length: \n')
         r[3,] <- BatchMeans(q3Length[,2], k=len3/10, numBatches=8, numObs=len3/10, d=numDigits)
         # cat('BatchMeans lifeTime: \n')
         r[4,] <- BatchMeans(lifeTime[,2], k=len4/10, numBatches=8, numObs=len4/10, d=numDigits)
         
-        meanThroughput <- len4 / (lifeTime[len4,2] - lifeTime[1,2])
+        # TODO Compute also throughput with batch means
+        meanThroughput <- round(len4 / (lifeTime[len4,1] - lifeTime[1,1]), 2)
+        #print(meanThroughput)
           
         results_column <- c(paste("PreliminarySimulation-",seeds[s], ",",iterationVars[it],"-#",j, sep=""))
         for (i in 1:4)
@@ -61,7 +61,7 @@ for (s in 1:length(seeds)) {
   }
 }
 print(results)
-# Visualizationw with .csv is not to be trusted
+# Visualization with .csv is not to be trusted
 write.table(results, file="../analysis/results.csv", append=FALSE, sep="\t", col.names=FALSE, row.names=FALSE)
 cat("\n", "### done ###", "\n")
 
