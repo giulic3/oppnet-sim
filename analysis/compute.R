@@ -28,18 +28,18 @@ ThroughputOverTime <- function(lifeTime_array){
 # x = vector containing the values
 # k = number of the first observations to ignore (to exclude warm up period)
 # numBatches = number of batches
-# numObs = number of observations per batch
+# numObsBatch = number of observations per batch
 # d = precision, number of digits after comma
-BatchMeans <- function(x, k, numBatches, numObs, d) {
+BatchMeans <- function(x, k, numBatches, numObsBatch, d) {
   
-  stopifnot(k + numBatches * numObs <= length(x))
+  stopifnot(k + numBatches * numObsBatch <= length(x))
   # Initialize an array filled with 0s
   means <- rep(0, numBatches)
   
   # Repeat numBatches times
   for (i in 1:numBatches) {
-    a <- (i-1) * numObs + 1 + k
-    b <- i * numObs + k
+    a <- (i-1) * numObsBatch + 1 + k
+    b <- i * numObsBatch + k
     # Extract the vector portion that contains the batch
     batch <- x[a:b]
     # Compute mean removing missing values

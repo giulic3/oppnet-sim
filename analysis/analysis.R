@@ -31,24 +31,19 @@ for (s in 1:length(seeds)) {
         q3Length <-read.csv(paste("PreliminarySimulation-",seeds[s], ",",iterationVars[it],"-#",j,"_q3length.csv", sep=""), header=TRUE, sep=',')
         lifeTime <-read.csv(paste("PreliminarySimulation-",seeds[s], ",",iterationVars[it],"-#",j,"_lifetime.csv", sep=""), header=TRUE, sep=',')
         
-        len1 <- length(q1Length[,2])
-        len2 <- length(q2Length[,2])
-        len3 <- length(q3Length[,2])
-        len4 <- length(lifeTime[,2])
-
         r <- matrix(data=0, nr=5, nc=4) # Results matrix
-        
+        warmupObs <- 800
         numDigits <- 2
         # cat('BatchMeans q1Length: \n')
-        r[1,] <- BatchMeans(q1Length[,2], k=len1/10, numBatches=8, numObs=len1/10, d=numDigits)
+        r[1,] <- BatchMeans(q1Length[,2], k=warmupObs, numBatches=40, numObsBatch=3*warmupObs, d=numDigits)
         #cat('BatchMeans q2Length: \n')
-        r[2,] <- BatchMeans(q2Length[,2], k=len2/10, numBatches=8, numObs=len2/10, d=numDigits)
+        r[2,] <- BatchMeans(q2Length[,2], k=warmupObs, numBatches=40, numObsBatch=3*warmupObs, d=numDigits)
         # cat('BatchMeans q3Length: \n')
-        r[3,] <- BatchMeans(q3Length[,2], k=len3/10, numBatches=8, numObs=len3/10, d=numDigits)
+        r[3,] <- BatchMeans(q3Length[,2], k=warmupObs, numBatches=40, numObsBatch=3*warmupObs, d=numDigits)
         # cat('BatchMeans lifeTime: \n')
-        r[4,] <- BatchMeans(lifeTime[,2], k=len4/10, numBatches=8, numObs=len4/10, d=numDigits)
+        r[4,] <- BatchMeans(lifeTime[,2], k=warmupObs, numBatches=40, numObsBatch=3*warmupObs, d=numDigits)
         # cat('BatchMeans throughput: \n')
-        r[5,] <- BatchMeans(ThroughputOverTime(lifeTime), k=len4/10, numBatches=8, numObs=len4/10, d=numDigits)
+        r[5,] <- BatchMeans(ThroughputOverTime(lifeTime), k=warmupObs, numBatches=40, numObsBatch=3*warmupObs, d=numDigits)
         # meanThroughput <- round(len4 / (lifeTime[len4,1] - lifeTime[1,1]), 2)
 
         results_column <- c(paste("PreliminarySimulation-",seeds[s], ",",iterationVars[it],"-#",j, sep=""))
