@@ -10,7 +10,7 @@ iterationVars <- c(2.5, 5, 10)
 runs <- 1 # this changes
 
 n_rows <- length(seeds)*length(iterationVars)*runs
-n_columns <- 18
+n_columns <- 21
 # results <- array(0, c(n_rows,n_columns))
 
 # First create a header for the csv file where results will be saved
@@ -18,7 +18,7 @@ header <- c("config name", "q1 length: mean", "q1 length: var", "q1 length: int 
             "q2 length: mean", "q2 length: var", "q2 length: int l", "q2 length: int r",
             "q3 length: mean", "q3 length: var", "q3 length: int l", "q3 length: int r",
             "lifetime: mean", "lifetime: var ", "lifetime: int l", "lifetime: int r",
-            "throughput: mean")
+            "throughput: mean", "throughput: var", "throughput: int l", "thoughput: int r")
 
 results <- rbind(header)
 
@@ -36,7 +36,7 @@ for (s in 1:length(seeds)) {
         len3 <- length(q3Length[,2])
         len4 <- length(lifeTime[,2])
 
-        r <- matrix(data=0, nr=4, nc=4) # Results matrix
+        r <- matrix(data=0, nr=5, nc=4) # Results matrix
         
         numDigits <- 2
         # cat('BatchMeans q1Length: \n')
@@ -47,15 +47,14 @@ for (s in 1:length(seeds)) {
         r[3,] <- BatchMeans(q3Length[,2], k=len3/10, numBatches=8, numObs=len3/10, d=numDigits)
         # cat('BatchMeans lifeTime: \n')
         r[4,] <- BatchMeans(lifeTime[,2], k=len4/10, numBatches=8, numObs=len4/10, d=numDigits)
-        
-        # TODO Compute also throughput with batch means
-        meanThroughput <- round(len4 / (lifeTime[len4,1] - lifeTime[1,1]), 2)
-        #print(meanThroughput)
-          
+        # cat('BatchMeans throughput: \n')
+        r[5,] <- BatchMeans(ThroughputOverTime(lifeTime), k=len4/10, numBatches=8, numObs=len4/10, d=numDigits)
+        # meanThroughput <- round(len4 / (lifeTime[len4,1] - lifeTime[1,1]), 2)
+
         results_column <- c(paste("PreliminarySimulation-",seeds[s], ",",iterationVars[it],"-#",j, sep=""))
-        for (i in 1:4)
+        for (i in 1:5)
           results_column <- c(results_column, r[i,1], r[i,2], r[i,3], r[i,4])
-        results_column <- c(results_column, meanThroughput)
+        # results_column <- c(results_column, meanThroughput)
         results <- rbind(results, results_column)
     }
   }
