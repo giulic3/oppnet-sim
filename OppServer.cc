@@ -142,6 +142,8 @@ void OppServer::handleMessage(cMessage *msg) {
 void OppServer::refreshDisplay() const
 {
     getDisplayString().setTagArg("i2", 0, jobServiced ? "status/execute" : "");
+    // Change icon server color when isServingQ1(red)or Q2(green)
+    getDisplayString().setTagArg("i", 1, isServingQ1 ? "red" : "green");
 }
 
 void OppServer::finish() {}
