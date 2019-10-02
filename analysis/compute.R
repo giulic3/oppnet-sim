@@ -18,7 +18,7 @@ ThroughputOverTime <- function(lifeTime_array){
   first_ts <- lifeTime_array[1,1]
   length <- length(lifeTime_array[,2])
   throughput_array <- array(data = 0, dim = length)
-  for (i in 1:length){
+  for (i in 2:length){
     last_ts <- lifeTime_array[i,1]
     throughput_array[i] <- i / (last_ts - first_ts)
   }

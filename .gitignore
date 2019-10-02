@@ -5,6 +5,10 @@ out/
 results/
 *.anf
 
+# analysis results
+analysis/*.pdf
+analysis/*.csv
+
 # compiled object files
 *.slo
 *.lo
