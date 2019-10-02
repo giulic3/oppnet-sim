@@ -4,7 +4,7 @@ source("compute.R")
 # MAIN
 setwd("../results/")
 
-seeds <- c(11, 17, 53)
+seeds <- c("11") # fill if you speciifed seeds in the .ini
 # 3 params for interArrivalTime
 iterationVars <- c(2.5, 5, 10)
 runs <- 1 # this changes
@@ -25,28 +25,28 @@ results <- rbind(header)
 for (s in 1:length(seeds)) {
   for (it in 1:length(iterationVars)) {
     for (j in 0:(runs-1)) {
-        q1Length <-read.csv(paste("PreliminarySimulation-",seeds[s], ",",iterationVars[it],"-#",j,"_q1length.csv", sep=""), header=TRUE, sep=',')
-        #cat(paste("PreliminarySimulation-",iterationVars[i],"-#",j,"_q1length.csv", sep=""), '\n')
-        q2Length <-read.csv(paste("PreliminarySimulation-",seeds[s], ",",iterationVars[it],"-#",j,"_q2length.csv", sep=""), header=TRUE, sep=',')
-        q3Length <-read.csv(paste("PreliminarySimulation-",seeds[s], ",",iterationVars[it],"-#",j,"_q3length.csv", sep=""), header=TRUE, sep=',')
-        lifeTime <-read.csv(paste("PreliminarySimulation-",seeds[s], ",",iterationVars[it],"-#",j,"_lifetime.csv", sep=""), header=TRUE, sep=',')
+        q1Length <-read.csv(paste("BatchSimulation-",seeds[s], ",", iterationVars[it],"-#",j,"_q1length.csv", sep=""), header=TRUE, sep=',')
+        #cat(paste("BatchSimulation-",iterationVars[i],"-#",j,"_q1length.csv", sep=""), '\n')
+        q2Length <-read.csv(paste("BatchSimulation-",seeds[s], ",", iterationVars[it],"-#",j,"_q2length.csv", sep=""), header=TRUE, sep=',')
+        q3Length <-read.csv(paste("BatchSimulation-",seeds[s], ",", iterationVars[it],"-#",j,"_q3length.csv", sep=""), header=TRUE, sep=',')
+        lifeTime <-read.csv(paste("BatchSimulation-",seeds[s], ",", iterationVars[it],"-#",j,"_lifetime.csv", sep=""), header=TRUE, sep=',')
         
         r <- matrix(data=0, nr=5, nc=4) # Results matrix
-        warmupObs <- 800
         numDigits <- 2
-        # cat('BatchMeans q1Length: \n')
-        r[1,] <- BatchMeans(q1Length[,2], k=warmupObs, numBatches=40, numObsBatch=3*warmupObs, d=numDigits)
-        #cat('BatchMeans q2Length: \n')
-        r[2,] <- BatchMeans(q2Length[,2], k=warmupObs, numBatches=40, numObsBatch=3*warmupObs, d=numDigits)
-        # cat('BatchMeans q3Length: \n')
-        r[3,] <- BatchMeans(q3Length[,2], k=warmupObs, numBatches=40, numObsBatch=3*warmupObs, d=numDigits)
-        # cat('BatchMeans lifeTime: \n')
-        r[4,] <- BatchMeans(lifeTime[,2], k=warmupObs, numBatches=40, numObsBatch=3*warmupObs, d=numDigits)
-        # cat('BatchMeans throughput: \n')
-        r[5,] <- BatchMeans(ThroughputOverTime(lifeTime), k=warmupObs, numBatches=40, numObsBatch=3*warmupObs, d=numDigits)
+        cat('BatchMeans q1Length: \n')
+        r[1,] <- BatchMeans(q1Length[,2], numBatches=40, numObsBatch=60, d=numDigits)
+        cat('BatchMeans q2Length: \n')
+        r[2,] <- BatchMeans(q2Length[,2], numBatches=40, numObsBatch=60, d=numDigits)
+        cat('BatchMeans q3Length: \n')
+        r[3,] <- BatchMeans(q3Length[,2], numBatches=40, numObsBatch=60, d=numDigits)
+        cat('BatchMeans lifeTime: \n')
+        r[4,] <- BatchMeans(lifeTime[,2], numBatches=40, numObsBatch=60, d=numDigits)
+        cat('BatchMeans throughput: \n')
+        throughput <- ThroughputOverTime(lifeTime)
+        r[5,] <- BatchMeans(throughput, numBatches=40, numObsBatch=60, d=numDigits)
         # meanThroughput <- round(len4 / (lifeTime[len4,1] - lifeTime[1,1]), 2)
 
-        results_column <- c(paste("PreliminarySimulation-",seeds[s], ",",iterationVars[it],"-#",j, sep=""))
+        results_column <- c(paste("BatchSimulation-",seeds[s], ",", "-",iterationVars[it],"-#",j, sep=""))
         for (i in 1:5)
           results_column <- c(results_column, r[i,1], r[i,2], r[i,3], r[i,4])
         # results_column <- c(results_column, meanThroughput)
@@ -54,7 +54,7 @@ for (s in 1:length(seeds)) {
     }
   }
 }
-print(results)
+#print(results)
 # Visualization with .csv is not to be trusted
 write.table(results, file="../analysis/results.csv", append=FALSE, sep="\t", col.names=FALSE, row.names=FALSE)
 cat("\n", "### done ###", "\n")

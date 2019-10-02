@@ -25,21 +25,22 @@ ThroughputOverTime <- function(lifeTime_array){
   return(throughput_array)
 }
 
+# Assumption: k simtime observations were already dropped in omnetpp
 # x = vector containing the values
-# k = number of the first observations to ignore (to exclude warm up period)
 # numBatches = number of batches
 # numObsBatch = number of observations per batch
 # d = precision, number of digits after comma
-BatchMeans <- function(x, k, numBatches, numObsBatch, d) {
-  
-  stopifnot(k + numBatches * numObsBatch <= length(x))
+BatchMeans <- function(x, numBatches, numObsBatch, d) {
+  print(numBatches * numObsBatch)
+  print(length(x))
+  stopifnot(numBatches * numObsBatch <= length(x))
   # Initialize an array filled with 0s
   means <- rep(0, numBatches)
   
   # Repeat numBatches times
   for (i in 1:numBatches) {
-    a <- (i-1) * numObsBatch + 1 + k
-    b <- i * numObsBatch + k
+    a <- (i-1) * numObsBatch + 1
+    b <- i * numObsBatch
     # Extract the vector portion that contains the batch
     batch <- x[a:b]
     # Compute mean removing missing values
