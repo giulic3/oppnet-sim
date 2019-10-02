@@ -33,17 +33,20 @@ for (s in 1:length(seeds)) {
         
         r <- matrix(data=0, nr=5, nc=4) # Results matrix
         numDigits <- 2
-        cat('BatchMeans q1Length: \n')
-        r[1,] <- BatchMeans(q1Length[,2], numBatches=40, numObsBatch=60, d=numDigits)
-        cat('BatchMeans q2Length: \n')
-        r[2,] <- BatchMeans(q2Length[,2], numBatches=40, numObsBatch=60, d=numDigits)
-        cat('BatchMeans q3Length: \n')
-        r[3,] <- BatchMeans(q3Length[,2], numBatches=40, numObsBatch=60, d=numDigits)
-        cat('BatchMeans lifeTime: \n')
-        r[4,] <- BatchMeans(lifeTime[,2], numBatches=40, numObsBatch=60, d=numDigits)
-        cat('BatchMeans throughput: \n')
+        numBatches <- 30 # 40
+        numObsBatch <- 40 # 60
+        
+        # cat('BatchMeans q1Length: \n')
+        r[1,] <- BatchMeans(q1Length[,2], numBatches, numObsBatch, d=numDigits)
+        # cat('BatchMeans q2Length: \n')
+        r[2,] <- BatchMeans(q2Length[,2], numBatches, numObsBatch, d=numDigits)
+        # cat('BatchMeans q3Length: \n')
+        r[3,] <- BatchMeans(q3Length[,2], numBatches, numObsBatch, d=numDigits)
+        # cat('BatchMeans lifeTime: \n')
+        r[4,] <- BatchMeans(lifeTime[,2], numBatches, numObsBatch, d=numDigits)
+        # cat('BatchMeans throughput: \n')
         throughput <- ThroughputOverTime(lifeTime)
-        r[5,] <- BatchMeans(throughput, numBatches=40, numObsBatch=60, d=numDigits)
+        r[5,] <- BatchMeans(throughput, numBatches, numObsBatch, d=numDigits)
         # meanThroughput <- round(len4 / (lifeTime[len4,1] - lifeTime[1,1]), 2)
 
         results_column <- c(paste("BatchSimulation-",seeds[s], ",", "-",iterationVars[it],"-#",j, sep=""))
@@ -54,8 +57,8 @@ for (s in 1:length(seeds)) {
     }
   }
 }
-#print(results)
+print(results)
 # Visualization with .csv is not to be trusted
-write.table(results, file="../analysis/results.csv", append=FALSE, sep="\t", col.names=FALSE, row.names=FALSE)
+write.table(results, file="../analysis/results.csv", append=TRUE, sep="\t", col.names=FALSE, row.names=FALSE)
 cat("\n", "### done ###", "\n")
 

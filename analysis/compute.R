@@ -31,8 +31,8 @@ ThroughputOverTime <- function(lifeTime_array){
 # numObsBatch = number of observations per batch
 # d = precision, number of digits after comma
 BatchMeans <- function(x, numBatches, numObsBatch, d) {
-  print(numBatches * numObsBatch)
-  print(length(x))
+  # print(numBatches * numObsBatch)
+  # print(length(x))
   stopifnot(numBatches * numObsBatch <= length(x))
   # Initialize an array filled with 0s
   means <- rep(0, numBatches)
