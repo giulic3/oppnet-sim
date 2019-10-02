@@ -27,7 +27,7 @@ Define_Module(OppPassiveQueue)
 OppPassiveQueue::OppPassiveQueue() {
     // TODO Auto-generated constructor stub
     selectionStrategy = nullptr;
-
+    savedJob = nullptr;
 }
 
 OppPassiveQueue::~OppPassiveQueue() {
@@ -54,24 +54,35 @@ void OppPassiveQueue::initialize() {
 
 void OppPassiveQueue::handleMessage(cMessage *msg) {
     EV << "Message name " << msg->getName() << endl;
-
-    Job *job = check_and_cast<Job *>(msg);
-    job->setTimestamp();
-
-    // Check for container capacity (just for queues with limited capacity)
-    if (capacity >= 0 && queue.getLength() >= capacity) {
-        EV << "Queue full! Job dropped.\n";
-        if (hasGUI())
-            bubble("Dropped!");
-        emit(droppedSignal, 1);
-        delete msg;
-        return;
+    // If acknowledgment from server arrived, delete original job
+    if (strcmp(msg->getName(), "ack") == 0) {
+        EV << "Ack received. Removing original job.\n";
+        //job = (Job *)queue.back();
+        savedJob = (Job *)queue.remove(savedJob);
+        delete savedJob;
+        savedJob = nullptr;
+        emit(queueLengthSignal, length());
     }
+    // If new job arrived
+    else {
+        Job *job = check_and_cast<Job *>(msg);
+        job->setTimestamp();
 
-    // Always enqueue, the packet in queue has to wait for a server request
-    queue.insert(job);
-    emit(queueLengthSignal, length());
-    job->setQueueCount(job->getQueueCount() + 1);
+        // Check for container capacity (just for queues with limited capacity)
+        if (capacity >= 0 && queue.getLength() >= capacity) {
+            EV << "Queue full! Job dropped.\n";
+            if (hasGUI())
+                bubble("Dropped!");
+            emit(droppedSignal, 1);
+            delete msg;
+            return;
+        }
+
+        // Always enqueue, the packet in queue has to wait for a server request
+        queue.insert(job);
+        emit(queueLengthSignal, length());
+        job->setQueueCount(job->getQueueCount() + 1);
+    }
 }
 
 void OppPassiveQueue::refreshDisplay() const {
@@ -91,22 +102,28 @@ void OppPassiveQueue::request(int gateIndex) {
         //ASSERT(!queue.isEmpty());
 
         Job *job;
+        // This queue always works as fifo
         if (fifo) {
-            job = (Job *)queue.pop();
+            // Returns pointer to the object at the front of the queue - the el returned by pop()
+            job = (Job *)queue.front();
         }
         else {
             job = (Job *)queue.back();
             // FIXME this may have bad performance as remove uses linear search
             queue.remove(job);
         }
-        emit(queueLengthSignal, length());
+
 
         job->setQueueCount(job->getQueueCount()+1);
         simtime_t d = simTime() - job->getTimestamp();
         job->setTotalQueueingTime(job->getTotalQueueingTime() + d);
         emit(queueingTimeSignal, d);
 
-        sendJob(job, gateIndex);
+        // Send copy of job - necessary to implement retransmission
+        Job *copy = (Job *)job->dup();
+        sendJob(copy, gateIndex);
+        // Save pointer to current job to remove later if transmission was successful
+        savedJob = job;
     }
     else {
         EV << "The server requested a job, but this queue is empty..." << endl;

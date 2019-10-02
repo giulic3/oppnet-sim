@@ -49,9 +49,10 @@ network OppNet
     connections:
         source.out --> Q1.in++;
         Q1.out++ --> S.in[0];
-        S.out[0] --> Q2.in++; // first S1 out goes to Q2
+        S.out[0] --> Q1.in++; // first S1 out goes to Q1 - just for acks
+        S.out[1] --> Q2.in++; // second S2 out goes to Q2 - for jobs and acks
         Q2.out++ --> S.in[1];
-        S.out[1] --> Q3.in++; // second S2 out goes to Q3
+        S.out[2] --> Q3.in++; // third S3 out goes to Q3 - for jobs
         Q3.out --> sink.in++;
 }
 

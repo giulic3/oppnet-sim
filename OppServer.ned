@@ -41,5 +41,5 @@ simple OppServer
         
     gates:
         input in[2];
-        output out[2];
+        output out[3];
 }

@@ -25,11 +25,9 @@ Define_Module(OppServer);
 OppServer::OppServer() {
     // TODO Auto-generated constructor stub
     selectionStrategy = nullptr;
-    allocated = false; // true if the server was requested
+    allocated = false;
 
     jobServiced = nullptr;
-    jobInterruptedQ1 = nullptr; // don't know if needed TODO
-    jobInterruptedQ2 = nullptr;
 
     endServiceMsg = nullptr;
     startSwitchEvent = nullptr;
@@ -42,8 +40,6 @@ OppServer::~OppServer() {
     delete selectionStrategy;
 
     delete jobServiced;
-    delete jobInterruptedQ1;
-    delete jobInterruptedQ2;
 
     cancelAndDelete(startSwitchEvent);
     cancelAndDelete(endSwitchOverTimeEvent);
@@ -73,7 +69,6 @@ void OppServer::initialize() {
 
 }
 
-// TODO: implementare meccanismo di ritrasmissione
 void OppServer::handleMessage(cMessage *msg) {
 
     EV << "Message name " << msg->getName() << endl;
@@ -81,18 +76,13 @@ void OppServer::handleMessage(cMessage *msg) {
     // Self-messages
     if (msg == startSwitchEvent) {
          serverIsAvailable = false;
-         // If server is not doing anything (what if it had already requested a job?)
          if (jobServiced) {
-             if (isServingQ1) jobInterruptedQ1 = jobServiced;
-             else jobInterruptedQ2 = jobServiced;
-
+             delete jobServiced;
              jobServiced = nullptr;
-
          }
-         // Schedule next switch in any case
-         scheduleAt(simTime()+switchOverTime, endSwitchOverTimeEvent);
-         // If jobServiced = true then the server will process the job and the next event
-         // will be a end service event
+     // Schedule next switch in any case
+     scheduleAt(simTime()+switchOverTime, endSwitchOverTimeEvent);
+
     }
     else if (msg == endSwitchOverTimeEvent) {
 
@@ -100,25 +90,14 @@ void OppServer::handleMessage(cMessage *msg) {
         // Invert isServingQ1 (0 to 1 and 1 to 0)
         isServingQ1 = !isServingQ1;
 
-        if (isServingQ1 && !jobInterruptedQ1) {
-            jobServiced = check_and_cast<Job *>(jobInterruptedQ1); // FIX:THIS IS NULL HERE
-            scheduleAt(simTime()+serviceTime, endServiceMsg);
-            emit(busySignal, true);
-        }
-        else if (!isServingQ1 && !jobInterruptedQ2) {
-            jobServiced = check_and_cast<Job *>(jobInterruptedQ2);
-            scheduleAt(simTime()+serviceTime, endServiceMsg);
-            emit(busySignal, true);
-        }
-        else {
-            // Schedule next switch event
-            if (isServingQ1)
-               scheduleAt(simTime()+Q1visitTime, startSwitchEvent);
-            else
-               scheduleAt(simTime()+Q2visitTime, startSwitchEvent);
+        // Schedule next switch event
+        if (isServingQ1)
+           scheduleAt(simTime()+Q1visitTime, startSwitchEvent);
+        else
+           scheduleAt(simTime()+Q2visitTime, startSwitchEvent);
 
-            requestJob();
-        }
+        requestJob();
+
     }
     else if (msg == endServiceMsg) {
 
@@ -127,31 +106,27 @@ void OppServer::handleMessage(cMessage *msg) {
 
         EV << "Deciding where to send the job, isServingQ1 is " << isServingQ1 << "\n";
         if (isServingQ1) {
+            // Send ack to Q1
+            send(new cMessage("ack"), "out", 0);
+
             // Send the job out to Q2
             EV << "Sending the job out to Q2" << endl;
-            send(jobServiced, "out", 0);
-            jobInterruptedQ1 = nullptr;
-
+            send(jobServiced, "out", 1);
         }
         else {
+            // Send ack to Q2
+            send(new cMessage("ack"), "out", 1);
+
             // Send the job out to Q3
             EV << "Sending the job out to Q3" << endl;
-            send(jobServiced, "out", 1);
-            jobInterruptedQ2 = nullptr;
-
+            send(jobServiced, "out", 2);
         }
 
         jobServiced = nullptr;
         allocated = false;
         emit(busySignal, false);
 
-        if (serverIsAvailable) {
-            requestJob();
-        }
-        else
-            // If the server is not available then it means it is ready to switch
-            scheduleAt(simTime()+switchOverTime, endSwitchOverTimeEvent);
-
+        requestJob();
 
     }
     // A new job arrives

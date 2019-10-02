@@ -35,7 +35,7 @@ private:
     int capacity;
     cQueue queue;
     SelectionStrategy *selectionStrategy;
-
+    Job *savedJob;
 
     void queueLengthChanged();
     void sendJob(Job *job, int gateIndex);
@@ -44,7 +44,6 @@ protected:
     virtual void initialize() override;
     virtual void handleMessage(cMessage *msg) override;
     virtual void refreshDisplay() const override;
-
 
 public:
     OppPassiveQueue();
