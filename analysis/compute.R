@@ -25,6 +25,33 @@ ThroughputOverTime <- function(lifeTime_array){
   return(throughput_array)
 }
 
+# Function that translates a 2D array of the kind (value, simtime when event occurred) to 2D array
+# of kind (value, simtime) where simtime goes from 0 to sim-time-limit 
+ConvertToSimtime <- function(two_dim_array) {
+  time_limit <- 3200 # sim-time-limit of the PreliminarySimulation
+  length <- length(two_dim_array[,1])
+  new_array <- array(0, c(time_limit, 2))
+  previous_index = 1
+  value <- 0
+  for (i in 1:(length-1)) {
+    event_time <- trunc(two_dim_array[i,1])
+    value <- trunc(two_dim_array[i,2])
+    for (j in previous_index:event_time-1) {
+      new_array[j,1] <- j
+      new_array[j,2] <- value
+    }
+    previous_index <- event_time
+  }
+  cat("previous index", previous_index, "\n")
+  cat("time_limit", time_limit, "\n")
+  cat("value", value, "\n")
+  for (i in previous_index:time_limit) {
+    new_array[i,1] <- i
+    new_array[i,2] <- value
+  }
+  return(new_array)
+}
+
 # Assumption: k simtime observations were already dropped in omnetpp
 # x = vector containing the values
 # numBatches = number of batches
