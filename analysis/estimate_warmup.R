@@ -3,8 +3,6 @@ library(ggplot2)
 source("compute.R")
 #setwd("../results/")
 
-# TODO Better to read arguments from a specified folder, that is where are the results of the PreliminarySimulation
-
 args = commandArgs(trailingOnly=TRUE)
 # Test if the 4 arguments are provided
 if (length(args) == 0) {
@@ -25,12 +23,6 @@ q1Length_df <- data.frame("simtime" = q1Length[,1], "length" = q1Length[,2], str
 q2Length_df <- data.frame("simtime" = q2Length[,1], "length" = q2Length[,2], stringsAsFactors = FALSE)
 q3Length_df <- data.frame("simtime" = q3Length[,1], "length" = q3Length[,2], stringsAsFactors = FALSE)
 lifeTime_df <- data.frame("simtime" = lifeTime[,1], "lifetime" = lifeTime[,2], stringsAsFactors = FALSE)
-
-# TODO average must be done with values from different replications
-q1Length_mean_df <- data.frame("simtime" = q1Length[,1], "avglength" = q1Length_measures[,1], stringsAsFactors = FALSE)
-q2Length_mean_df <- data.frame("simtime" = q2Length[,1], "avglength" = q2Length_measures[,1], stringsAsFactors = FALSE)
-q3Length_mean_df <- data.frame("simtime" = q3Length[,1], "avglength" = q3Length_measures[,1], stringsAsFactors = FALSE)
-lifeTime_mean_df <- data.frame("simtime" = lifeTime[,1], "avglifetime" = lifeTime_measures[,1], stringsAsFactors = FALSE)
 
 # Compute throughput
 throughput <- ThroughputOverTime(lifeTime)
