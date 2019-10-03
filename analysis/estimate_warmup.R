@@ -1,8 +1,8 @@
 #!/usr/bin/env Rscript
 library(ggplot2)
 source("compute.R")
-#setwd("../results/")
 
+# This function produces plots for selected csv files and all the replications in a folder
 args = commandArgs(trailingOnly=TRUE)
 # Test if the 4 arguments are provided
 if (length(args) == 0) {
@@ -12,17 +12,59 @@ if (length(args) == 0) {
   - q3length
   - lifetime", call.=FALSE)
 }
+
 # Reads omnetpp vectors into data frames
 q1Length <- read.csv(args[1], sep=',')
 q2Length <- read.csv(args[2], sep=',')
 q3Length <- read.csv(args[3], sep=',')
 lifeTime <- read.csv(args[4], sep=',') # lifeTime of a job from source to sink
 
+# TODO find better way to load csv from dir
+setwd("./csv/2.5") # set dir according to param to study
+# Read csv from directory and convert to array with simtime as first column
+# order is lifetime - q1length - q2length - q3length
+dir_files <- list.files() 
+print(dir_files)
+csvs <- list()
+
+for (i in 1:length(dir_files)) {
+  csvs[[i]] <- ConvertToSimtime(read.csv(dir_files[i], sep = ','))
+}
+
+sim_length <- 3200
+q1Length_avg <- matrix(0, nrow=sim_length, ncol=2)
+q2Length_avg <- matrix(0, nrow=sim_length, ncol=2)
+q3Length_avg <- matrix(0, nrow=sim_length, ncol=2)
+lifeTime_avg <- matrix(0, nrow=sim_length, ncol=2)
+measures_array = c(q1Length_avg, q2Length_avg, q3Length_avg, lifeTime_avg)
+
+lifeTimes <- c(csvs[[1]], csvs[[5]], csvs[[9]])
+q1Lengths <- c(csvs[[2]], csvs[[6]], csvs[[10]])
+q2Lengths <- c(csvs[[3]], csvs[[7]], csvs[[11]])
+q3Lengths <- c(csvs[[4]], csvs[[8]], csvs[[12]])
+
+for (i in 1:sim_length) {
+  q1Length_avg[i,1] <- i
+  q1Length_avg[i,2] <- mean(q1Lengths, na.rm=TRUE)
+  
+  q2Length_avg[i,1] <- i
+  q2Length_avg[i,2] <- mean(q2Lengths, na.rm=TRUE)  
+  
+  q3Length_avg[i,1] <- i
+  q3Length_avg[i,2] <- mean(q3Lengths, na.rm=TRUE)  
+  
+  lifeTime_avg[i,1] <- i
+  lifeTime_avg[i,2] <- mean(lifeTimes, na.rm=TRUE)
+}
+
 # Prepare dfs
 q1Length_df <- data.frame("simtime" = q1Length[,1], "length" = q1Length[,2], stringsAsFactors = FALSE)
 q2Length_df <- data.frame("simtime" = q2Length[,1], "length" = q2Length[,2], stringsAsFactors = FALSE)
 q3Length_df <- data.frame("simtime" = q3Length[,1], "length" = q3Length[,2], stringsAsFactors = FALSE)
 lifeTime_df <- data.frame("simtime" = lifeTime[,1], "lifetime" = lifeTime[,2], stringsAsFactors = FALSE)
+
+# TODO Compute mean averaged between replications
+
 
 # Compute throughput
 throughput <- ThroughputOverTime(lifeTime)

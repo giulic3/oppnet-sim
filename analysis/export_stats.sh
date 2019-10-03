@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Execute from results directory
+# Execute from analysis/ directory
 # Export queues length and jobs lifetime
-find -iname '*.vec' | while read name; do
+find ../results/ -iname '*.vec' | while read name; do
     out=$(echo $name | sed 's/\.vec//')
     echo name $name
     echo out $out
