@@ -53,16 +53,16 @@ Useful flags:
 
 ### Extract the statistics and perform analysis in R
 
-Execute script to extract .csv files from .sca and .vec files produced by OMNeT++
+Execute script to extract .csv files from .sca and .vec files produced by OMNeT++:
 ```
 bash export_stats.sh
 ```
 Execute inside .csv directory (csv/{2.5, 5, 10}), will plot response variables from .csv files provided and the averaged 
-variables from multiple sim replications
+variables from multiple sim replications:
 ```
 Rscript estimate_warmup.R <q1length.csv, q2length.csv, q3length.csv, lifetime.csv>
 ```
-Sample simulation outputs (after removing warm up period) and save results to .csv
+Sample simulation outputs (after removing warm up period) and save results to .csv:
 
 ```
 Rscript analysis.R
