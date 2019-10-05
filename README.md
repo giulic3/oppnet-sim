@@ -53,10 +53,19 @@ Useful flags:
 
 ### Extract the statistics and perform analysis in R
 
-The bash script export_stats
+Execute script to extract .csv files from .sca and .vec files produced by OMNeT++
 ```
-# first execute scavetool x *.sca -o oppnet-sim.csv or use omnet editor
-# click on .anf, right click on measure, export data, csv for spreadsheets
+bash export_stats.sh
+```
+Execute inside .csv directory (csv/{2.5, 5, 10}), will plot response variables from .csv files provided and the averaged 
+variables from multiple sim replications
+```
+Rscript estimate_warmup.R <q1length.csv, q2length.csv, q3length.csv, lifetime.csv>
+```
+Sample simulation outputs (after removing warm up period) and save results to .csv
+
+```
+Rscript analysis.R
 ```
 
-TODO finish adding how to extract stats (cmd line or from editor) and run R script
+For more details, see doc/ folder (in Italian only).
