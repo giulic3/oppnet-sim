@@ -31,7 +31,6 @@ ConvertToSimtime <- function(two_dim_array) {
   time_limit <- 3200 # sim-time-limit of the PreliminarySimulation
   length <- length(two_dim_array[,1])
   new_array <- matrix(0, nrow=time_limit, ncol=2)
-  str(new_array)
   previous_index = 1
   value <- 0
   for (i in 1:(length-1)) {
@@ -43,9 +42,7 @@ ConvertToSimtime <- function(two_dim_array) {
     }
     previous_index <- event_time
   }
-  #cat("previous index", previous_index, "\n")
-  #cat("time_limit", time_limit, "\n")
-  #cat("value", value, "\n")
+
   for (i in previous_index:time_limit) {
     new_array[i,1] <- i
     new_array[i,2] <- value
