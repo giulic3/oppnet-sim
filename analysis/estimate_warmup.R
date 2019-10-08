@@ -14,22 +14,22 @@ if (length(args) == 0) {
   - lifetime", call.=FALSE)
 }
 
+sim_length <- 10000
 # Reads omnetpp vectors into data frames
 q1Length <- read.csv(args[1], sep=',')
 q2Length <- read.csv(args[2], sep=',')
 q3Length <- read.csv(args[3], sep=',')
 lifeTime <- read.csv(args[4], sep=',') # lifeTime of a job from source to sink
 
-setwd("./csv/5") # TODO: Set dir according to param to study
+setwd("./csv/10") # TODO: Set dir according to param to study
 # Read csv from directory and convert to array with simtime as first column
 # Order is lifetime - q1length - q2length - q3length
 csv_files <- list.files(pattern="*.csv")
 csv_dfs <- list()
-for (i in 1:length(csv_files)) csv_dfs[[i]] = ConvertToSimtime(read.csv(csv_files[i], sep=','))
+cat("Convert to simtime...\n")
+for (i in 1:length(csv_files)) csv_dfs[[i]] = ConvertToSimtime(read.csv(csv_files[i], sep=','), sim_length)
 
-# Compute mean averaged between replications
-
-sim_length <- 3200
+cat("Compute mean averaged between replications...\n")
 q1Length_avg <- matrix(0, nrow=sim_length, ncol=2)
 q2Length_avg <- matrix(0, nrow=sim_length, ncol=2)
 q3Length_avg <- matrix(0, nrow=sim_length, ncol=2)
@@ -52,7 +52,7 @@ for (i in 1:sim_length) {
     avg_measures_list[[m]][i,2] <- mean(c(current_measure[[1]][i,2], current_measure[[2]][i,2], current_measure[[3]][i,2]), na.rm=TRUE)
   }
 }
-# Compute throughput
+cat("Compute throughput...\n")
 throughput <- ThroughputOverTime(lifeTime)
 
 # Prepare dframes to use with ggplot2
@@ -71,18 +71,16 @@ throughput_df <- data.frame("simtime" = lifeTime[,1], "avgthroughput" = throughp
 x_axis_limit = 3000
 y_axis_limit = 10 
 
-cat("Save data plots...\n")
+cat("Save plots...\n")
 ggplot(q1Length_df, aes(x=simtime,y=length)) + geom_line(size=0.4, color="black") + coord_cartesian(xlim = c(0, x_axis_limit), ylim = c(0, 10)) + ggtitle("Length of Q1 over time")
 #ggsave("q1Length_plot.pdf")
 ggplot(q2Length_df, aes(x=simtime,y=length)) + geom_line(size=0.4) + coord_cartesian(xlim = c(0, x_axis_limit), ylim = c(0, 10)) + ggtitle("Length of Q2 over time")
 ggplot(q3Length_df, aes(x=simtime,y=length)) + geom_line(size=0.4) + coord_cartesian(xlim = c(0, x_axis_limit), ylim = c(0, 10)) + ggtitle("Length of Q3 over time")
 ggplot(lifeTime_df, aes(x=simtime,y=lifetime)) + geom_line(size=0.4) + coord_cartesian(xlim = c(0, x_axis_limit), ylim = c(0, 60)) + ggtitle("Lifetimes of incoming jobs")
 
-cat("Save averaged data plots...\n")
-ggplot(avg_dfs[[1]], aes(x=simtime,y=avgvalue)) + geom_line(size=0.4, color="black") + coord_cartesian(xlim = c(0, x_axis_limit), ylim = c(0, 10)) + ggtitle("Avg length of Q1 over time")
-ggplot(avg_dfs[[2]], aes(x=simtime,y=avgvalue)) + geom_line(size=0.4) + coord_cartesian(xlim = c(0, x_axis_limit), ylim = c(0, 10)) + ggtitle("Avg length of Q2 over time")
-ggplot(avg_dfs[[3]], aes(x=simtime,y=avgvalue)) + geom_line(size=0.4) + coord_cartesian(xlim = c(0, x_axis_limit), ylim = c(0, 10)) + ggtitle("Avg length of Q3 over time")
-ggplot(avg_dfs[[4]], aes(x=simtime,y=avgvalue)) + geom_line(size=0.4) + coord_cartesian(xlim = c(0, x_axis_limit), ylim = c(0, 60)) + ggtitle("Avg lifetimes of incoming jobs")
+ggplot(avg_dfs[[1]], aes(x=simtime,y=avgvalue)) + geom_line(size=0.4, color="black") + coord_cartesian(xlim = c(0, x_axis_limit), ylim = c(0, 4)) + ggtitle("Avg length of Q1 over time")
+ggplot(avg_dfs[[2]], aes(x=simtime,y=avgvalue)) + geom_line(size=0.4) + coord_cartesian(xlim = c(0, x_axis_limit), ylim = c(0, 4)) + ggtitle("Avg length of Q2 over time")
+ggplot(avg_dfs[[3]], aes(x=simtime,y=avgvalue)) + geom_line(size=0.4) + coord_cartesian(xlim = c(0, x_axis_limit), ylim = c(0, 4)) + ggtitle("Avg length of Q3 over time")
+ggplot(avg_dfs[[4]], aes(x=simtime,y=avgvalue)) + geom_line(size=0.4) + coord_cartesian(xlim = c(0, x_axis_limit), ylim = c(0, 30)) + ggtitle("Avg lifetimes of incoming jobs")
 
-cat("Save throughput plot...\n")
-ggplot(throughput_df, aes(x=simtime, y=avgthroughput)) + geom_line(size=0.4) + coord_cartesian(xlim = c(10, 3000), ylim = c(0, 1)) + ggtitle("Network throughput")
+ggplot(throughput_df, aes(x=simtime, y=avgthroughput)) + geom_line(size=0.4) + coord_cartesian(xlim = c(10, x_axis_limit), ylim = c(0, 1)) + ggtitle("Network throughput")

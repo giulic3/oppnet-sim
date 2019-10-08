@@ -1,4 +1,0 @@
-"config name"	"q1 length: mean"	"q1 length: var"	"q1 length: int l"	"q1 length: int r"	"q2 length: mean"	"q2 length: var"	"q2 length: int l"	"q2 length: int r"	"q3 length: mean"	"q3 length: var"	"q3 length: int l"	"q3 length: int r"	"lifetime: mean"	"lifetime: var "	"lifetime: int l"	"lifetime: int r"	"throughput: mean"	"throughput: var"	"throughput: int l"	"thoughput: int r"
-"BatchSimulation-11,-2.5-#0"	"0.96"	"0.02"	"-0.07"	"1.99"	"1"	"0.02"	"-0.1"	"2.1"	"1.06"	"0.1"	"-0.17"	"2.29"	"3.99"	"0.1"	"-0.16"	"8.14"	"0.4"	"0"	"0"	"0.8"
-"BatchSimulation-11,-5-#0"	"0.73"	"0.01"	"-0.07"	"1.53"	"0.75"	"0.01"	"-0.06"	"1.56"	"0.77"	"0.02"	"-0.03"	"1.57"	"3.8"	"0.04"	"-0.12"	"7.72"	"0.2"	"0"	"0"	"0.4"
-"BatchSimulation-11,-10-#0"	"0.62"	"0"	"-0.05"	"1.29"	"0.63"	"0.01"	"-0.07"	"1.33"	"0.63"	"0.01"	"-0.04"	"1.3"	"3.63"	"0.02"	"-0.08"	"7.34"	"0.1"	"0"	"0"	"0.2"

@@ -27,8 +27,7 @@ ThroughputOverTime <- function(lifeTime_array){
 
 # Function that translates a 2D array of the kind (value, simtime when event occurred) to 2D array
 # of kind (value, simtime) where simtime goes from 0 to sim-time-limit 
-ConvertToSimtime <- function(two_dim_array) {
-  time_limit <- 3200 # sim-time-limit of the PreliminarySimulation
+ConvertToSimtime <- function(two_dim_array, time_limit) {
   length <- length(two_dim_array[,1])
   new_array <- matrix(0, nrow=time_limit, ncol=2)
   previous_index = 1

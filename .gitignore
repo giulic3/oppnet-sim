@@ -6,8 +6,8 @@ results/
 *.anf
 
 # analysis results
-analysis/*.pdf
-analysis/*.csv
+analysis/*/*.pdf
+*.csv
 
 # compiled object files
 *.slo
