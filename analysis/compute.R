@@ -1,24 +1,12 @@
 #!/usr/bin/env Rscript
 
-# Function that given a vector of values and timesteps, return array of cumulative means and variances
-# 'array' must have two dimensions
-CumulativeMeasures <- function(array) {
-  count <- length(array[,1])
-  means <- array(data = 0, dim = count)
-  variances <- array(data = 0, dim = count)
-  for (i in 1:count) {
-    means[i] <- mean(array[1,2]:array[i,2], na.rm=TRUE)
-    variances[i] <- var(array[1,2]:array[i,2], na.rm=TRUE) 
-  }
-  measures <- cbind(means, variances)
-  return(measures)
-}
 # Function that given the array of jobs lifetimes, return array of throughput over time for plotting
 ThroughputOverTime <- function(lifeTime_array){
   first_ts <- lifeTime_array[1,1]
   length <- length(lifeTime_array[,2])
   throughput_array <- array(data = 0, dim = length)
-  for (i in 2:length){
+  # 'i' starts from 3 to avoid values of throughput that are not significant (very beginning of sim)
+  for (i in 3:length){
     last_ts <- lifeTime_array[i,1]
     throughput_array[i] <- i / (last_ts - first_ts)
   }
@@ -76,8 +64,8 @@ BatchMeans <- function(x, numBatches, numObsBatch, d) {
   variance <- round(var(means), digits=d)
   n <- length(means)
   # Confidence level 95%, qt quantile function, df degrees of freedom
-  #a <- round(qt(0.975, df = n - 1) * sqrt(variance/n), digits=d)
-  a <- round(quantile(means, probs=0.75, na.rm = TRUE), digits=d)
+  a <- round(qt(0.95, df = numBatches - 1) * sqrt(variance/numBatches), digits=d)
+  #a <- round(quantile(means, probs=0.75, na.rm = TRUE), digits=d)
   confidenceIntervalLeft <- round(finalMean - a, digits=d)
   confidenceIntervalRight <- round(finalMean + a, digits=d)
   # Result is a concatenation of these vectors

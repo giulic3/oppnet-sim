@@ -21,7 +21,7 @@ q2Length <- read.csv(args[2], sep=',')
 q3Length <- read.csv(args[3], sep=',')
 lifeTime <- read.csv(args[4], sep=',') # lifeTime of a job from source to sink
 
-setwd("./csv/10") # TODO: Set dir according to param to study
+setwd("./csv/5") # TODO: Set dir according to param to study
 # Read csv from directory and convert to array with simtime as first column
 # Order is lifetime - q1length - q2length - q3length
 csv_files <- list.files(pattern="*.csv")
@@ -53,7 +53,10 @@ for (i in 1:sim_length) {
   }
 }
 cat("Compute throughput...\n")
+# NB Throughput is not averaged between runs
 throughput <- ThroughputOverTime(lifeTime)
+for (i in 1:10)
+  print(throughput[i])
 
 # Prepare dframes to use with ggplot2
 q1Length_df <- data.frame("simtime" = q1Length[,1], "length" = q1Length[,2], stringsAsFactors = FALSE)
@@ -68,7 +71,7 @@ for (i in 1:length(avg_measures_list))
 throughput_df <- data.frame("simtime" = lifeTime[,1], "avgthroughput" = throughput, stringsAsFactors = FALSE)
 
 # Create and save plots
-x_axis_limit = 3000
+x_axis_limit = 5000
 y_axis_limit = 10 
 
 cat("Save plots...\n")
@@ -81,6 +84,6 @@ ggplot(lifeTime_df, aes(x=simtime,y=lifetime)) + geom_line(size=0.4) + coord_car
 ggplot(avg_dfs[[1]], aes(x=simtime,y=avgvalue)) + geom_line(size=0.4, color="black") + coord_cartesian(xlim = c(0, x_axis_limit), ylim = c(0, 4)) + ggtitle("Avg length of Q1 over time")
 ggplot(avg_dfs[[2]], aes(x=simtime,y=avgvalue)) + geom_line(size=0.4) + coord_cartesian(xlim = c(0, x_axis_limit), ylim = c(0, 4)) + ggtitle("Avg length of Q2 over time")
 ggplot(avg_dfs[[3]], aes(x=simtime,y=avgvalue)) + geom_line(size=0.4) + coord_cartesian(xlim = c(0, x_axis_limit), ylim = c(0, 4)) + ggtitle("Avg length of Q3 over time")
-ggplot(avg_dfs[[4]], aes(x=simtime,y=avgvalue)) + geom_line(size=0.4) + coord_cartesian(xlim = c(0, x_axis_limit), ylim = c(0, 30)) + ggtitle("Avg lifetimes of incoming jobs")
+ggplot(avg_dfs[[4]], aes(x=simtime,y=avgvalue)) + geom_line(size=0.4) + coord_cartesian(xlim = c(0, x_axis_limit), ylim = c(0, 15)) + ggtitle("Avg lifetimes of incoming jobs")
 
-ggplot(throughput_df, aes(x=simtime, y=avgthroughput)) + geom_line(size=0.4) + coord_cartesian(xlim = c(10, x_axis_limit), ylim = c(0, 1)) + ggtitle("Network throughput")
+ggplot(throughput_df, aes(x=simtime, y=avgthroughput)) + geom_line(size=0.4) + coord_cartesian(xlim = c(10, x_axis_limit), ylim = c(0, 0.50)) + ggtitle("Network throughput")

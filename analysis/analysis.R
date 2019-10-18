@@ -4,9 +4,9 @@ source("compute.R")
 # MAIN
 setwd("../results/")
 
-seeds <- c("11") # fill if you speciifed seeds in the .ini
+seeds <- c("11") # fill if you specified seeds in the .ini
 # 3 params for interArrivalTime
-iterationVars <- c(2.5, 5, 10)
+iterationVars <- c(5, 7.5, 10)
 runs <- 1 # this changes
 
 n_rows <- length(seeds)*length(iterationVars)*runs
@@ -32,9 +32,9 @@ for (s in 1:length(seeds)) {
         lifeTime <-read.csv(paste("BatchSimulation-",seeds[s], ",", iterationVars[it],"-#",j,"_lifetime.csv", sep=""), header=TRUE, sep=',')
         
         r <- matrix(data=0, nr=5, nc=4) # Results matrix
-        numDigits <- 2
-        numBatches <- 30 # 40
-        numObsBatch <- 40 # 60
+        numDigits <- 5
+        numBatches <- 10 # 30,40,10
+        numObsBatch <- 200 # 40,60,200
         
         # cat('BatchMeans q1Length: \n')
         r[1,] <- BatchMeans(q1Length[,2], numBatches, numObsBatch, d=numDigits)
