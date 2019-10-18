@@ -63,9 +63,8 @@ BatchMeans <- function(x, numBatches, numObsBatch, d) {
   # Variance is computed using N-1 at the bottom of the fraction
   variance <- round(var(means), digits=d)
   n <- length(means)
-  # Confidence level 95%, qt quantile function, df degrees of freedom
+  # Confidence level 95%, qt quantile function, df degrees of freedom = nsamples-1
   a <- round(qt(0.95, df = numBatches - 1) * sqrt(variance/numBatches), digits=d)
-  #a <- round(quantile(means, probs=0.75, na.rm = TRUE), digits=d)
   confidenceIntervalLeft <- round(finalMean - a, digits=d)
   confidenceIntervalRight <- round(finalMean + a, digits=d)
   # Result is a concatenation of these vectors
